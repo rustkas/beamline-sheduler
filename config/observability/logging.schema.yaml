@@ -1,0 +1,178 @@
+# Logging Schema Catalog
+# Version: 1.0
+# Last Updated: 2025-01-27
+# Author: Agent 10 - Observability/Telemetry
+
+# Source: docs/OBSERVABILITY.md
+
+# Log Format Schema
+log_schema:
+  format: json
+  encoding: utf8
+  
+  # Required Fields
+  required_fields:
+    - timestamp
+    - level
+    - component
+    - message
+    - context
+    
+  # Optional Fields
+  optional_fields:
+    - trace_id
+    - tenant_id
+    - metadata
+    
+  # Field Definitions
+  fields:
+    timestamp:
+      type: string
+      format: iso8601
+      precision: microsecond
+      example: "2025-01-27T12:00:00.123456Z"
+      required: true
+      
+    level:
+      type: string
+      enum: [ERROR, WARN, INFO, DEBUG]
+      required: true
+      
+    component:
+      type: string
+      enum: [router, provider, ingress, gateway, usage]
+      required: true
+      
+    message:
+      type: string
+      description: "Human-readable message"
+      required: true
+      
+    context:
+      type: object
+      description: "Additional structured context"
+      required: true
+      
+    trace_id:
+      type: string
+      format: hex
+      length: 128
+      required: false
+      
+    tenant_id:
+      type: string
+      required: false
+      
+    metadata:
+      type: object
+      required: false
+
+# Log Levels
+log_levels:
+  ERROR:
+    description: "Critical errors requiring immediate attention"
+    examples:
+      - "Policy load failed"
+      - "Database connection failed"
+      - "Routing decision failed"
+    usage: "Service failures, unhandled exceptions, data corruption"
+    
+  WARN:
+    description: "Warnings and potential issues"
+    examples:
+      - "No provider available"
+      - "Fallback provider selected"
+      - "Cache miss"
+    usage: "Degraded performance, recoverable issues, approaching limits"
+    
+  INFO:
+    description: "Informational messages for normal operations"
+    examples:
+      - "Routing request started"
+      - "Routing decision made"
+      - "Policy loaded successfully"
+    usage: "Request started/completed, successful operations, state changes"
+    
+  DEBUG:
+    description: "Detailed debugging information"
+    examples:
+      - "Policy loaded from cache"
+      - "Decision algorithm started"
+      - "Provider selected by weights"
+    usage: "Cache operations, algorithm steps, internal state transitions"
+
+# Component-Specific Log Fields
+component_fields:
+  router:
+    context_fields:
+      - tenant_id
+      - policy_id
+      - provider_id
+      - reason
+      - latency_ms
+      - decision_latency_ms
+      - policy_load_latency_ms
+      
+  provider:
+    context_fields:
+      - provider_id
+      - model
+      - tenant_id
+      - latency_ms
+      - cost
+      - tokens_used
+      
+  ingress:
+    context_fields:
+      - tenant_id
+      - message_id
+      - message_size
+      - queue_size
+      - bandwidth_bytes
+      
+  gateway:
+    context_fields:
+      - tenant_id
+      - request_id
+      - endpoint
+      - method
+      - status_code
+      - latency_ms
+
+# PII and Secret Filtering
+pii_filtering:
+  enabled: true
+  
+  # Fields to filter (replaced with [REDACTED])
+  filtered_fields:
+    - password
+    - api_key
+    - secret
+    - token
+    - access_token
+    - refresh_token
+    - authorization
+    - credit_card
+    - ssn
+    - email
+    - phone
+    
+  # Filtering behavior
+  behavior:
+    replace_with: "[REDACTED]"
+    recursive: true
+    case_sensitive: false
+
+# Log Aggregation
+aggregation:
+  backend: loki
+  format: json
+  batch_size: 100
+  flush_interval: 5s
+  
+# Log Retention
+retention:
+  default: 90d
+  errors: 180d
+  debug: 7d
+

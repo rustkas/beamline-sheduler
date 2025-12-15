@@ -1,0 +1,486 @@
+# Metrics Catalog
+# Version: 1.0
+# Last Updated: 2025-01-27
+# Author: Agent 10 - Observability/Telemetry
+
+# Source: docs/OBSERVABILITY.md
+
+metrics:
+  # Router (Erlang/OTP)
+  router:
+    - name: beamline_router_requests_total
+      type: counter
+      description: "Total number of routing requests"
+      labels:
+        - provider
+        - status
+      component: router
+      language: erlang
+      module: router_metrics
+      
+    - name: beamline_router_latency_seconds
+      type: histogram
+      description: "Routing decision latency"
+      labels:
+        - provider
+      buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0]
+      component: router
+      language: erlang
+      module: router_metrics
+      
+    - name: beamline_router_errors_total
+      type: counter
+      description: "Total number of routing errors"
+      labels:
+        - provider
+        - error_type
+      component: router
+      language: erlang
+      module: router_metrics
+      
+    - name: beamline_router_active_requests
+      type: gauge
+      description: "Current number of active routing requests"
+      labels: []
+      component: router
+      language: erlang
+      module: router_metrics
+      
+    - name: beamline_router_policy_loads_total
+      type: counter
+      description: "Total number of policy loads"
+      labels:
+        - tenant_id
+        - source
+      component: router
+      language: erlang
+      module: router_metrics
+      
+    - name: beamline_router_cache_hits_total
+      type: counter
+      description: "Total number of cache hits"
+      labels:
+        - cache_type
+      component: router
+      language: erlang
+      module: router_metrics
+      
+    - name: beamline_router_cache_misses_total
+      type: counter
+      description: "Total number of cache misses"
+      labels:
+        - cache_type
+      component: router
+      language: erlang
+      module: router_metrics
+      
+    - name: beamline_router_decision_latency_seconds
+      type: histogram
+      description: "Decision algorithm latency"
+      labels:
+        - decision_type
+      buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
+      component: router
+      language: erlang
+      module: router_metrics
+      
+    # Intake validation metrics (CP2+)
+    - name: router_intake_messages_total
+      type: counter
+      description: "Total messages processed by Router intake"
+      labels:
+        - subject
+        - status
+      component: router
+      language: erlang
+      module: router_intake_error_handler
+      
+    - name: router_intake_validation_errors_total
+      type: counter
+      description: "Validation errors during intake"
+      labels:
+        - error_code
+        - subject
+        - tenant_id
+      component: router
+      language: erlang
+      module: router_intake_error_handler
+      
+    - name: router_intake_dlq_messages_total
+      type: counter
+      description: "Messages sent to DLQ"
+      labels:
+        - reason
+        - error_code
+        - subject
+      component: router
+      language: erlang
+      module: router_intake_error_handler
+      
+    - name: router_intake_dlq_publish_failed_total
+      type: counter
+      description: "Failed DLQ publications"
+      labels:
+        - reason
+        - error_code
+        - subject
+        - failure_reason
+      component: router
+      language: erlang
+      module: router_intake_error_handler
+      
+    # Idempotency metrics (CP2+)
+    - name: router_idempotency_hit_total
+      type: counter
+      description: "Idempotency cache hits (duplicate messages detected)"
+      labels:
+        - key_type
+      component: router
+      language: erlang
+      module: router_idempotency
+      
+    - name: router_idempotency_miss_total
+      type: counter
+      description: "Idempotency cache misses (new messages)"
+      labels:
+        - key_type
+      component: router
+      language: erlang
+      module: router_idempotency
+      
+    # NATS connection metrics (CP2+)
+    - name: router_nats_connection_errors_total
+      type: counter
+      description: "NATS connection errors"
+      labels:
+        - reason
+      component: router
+      language: erlang
+      module: router_nats
+      
+    - name: router_nats_reconnect_total
+      type: counter
+      description: "NATS reconnection events"
+      labels: []
+      component: router
+      language: erlang
+      module: router_nats
+      
+    # JetStream queue depth metrics (CP2+)
+    - name: router_jetstream_pending_messages
+      type: gauge
+      description: "Pending messages in JetStream consumer"
+      labels:
+        - subject
+        - consumer
+      component: router
+      language: erlang
+      module: router_jetstream_monitor
+      
+    - name: router_jetstream_ack_pending_messages
+      type: gauge
+      description: "Messages awaiting ACK"
+      labels:
+        - subject
+        - consumer
+      component: router
+      language: erlang
+      module: router_jetstream_monitor
+      
+    - name: router_jetstream_delivered_messages_total
+      type: counter
+      description: "Total delivered messages"
+      labels:
+        - subject
+        - consumer
+      component: router
+      language: erlang
+      module: router_jetstream_monitor
+      
+    - name: router_jetstream_redelivered_messages_total
+      type: counter
+      description: "Total redelivered messages"
+      labels:
+        - subject
+        - consumer
+      component: router
+      language: erlang
+      module: router_jetstream_monitor
+      
+    # Processing latency metrics (CP2+)
+    - name: router_intake_processing_latency_seconds
+      type: histogram
+      description: "Processing latency per message"
+      labels:
+        - subject
+        - status
+      buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+      component: router
+      language: erlang
+      module: router_decide_consumer
+      
+    - name: router_intake_processing_latency_p50
+      type: gauge
+      description: "50th percentile processing latency"
+      labels:
+        - subject
+      component: router
+      language: erlang
+      module: router_decide_consumer
+      
+    - name: router_intake_processing_latency_p95
+      type: gauge
+      description: "95th percentile processing latency"
+      labels:
+        - subject
+      component: router
+      language: erlang
+      module: router_decide_consumer
+      
+    - name: router_intake_processing_latency_p99
+      type: gauge
+      description: "99th percentile processing latency"
+      labels:
+        - subject
+      component: router
+      language: erlang
+      module: router_decide_consumer
+      
+    # In-flight message metrics (CP2+)
+    - name: router_intake_inflight_messages
+      type: gauge
+      description: "Messages currently being processed"
+      labels:
+        - subject
+      component: router
+      language: erlang
+      module: router_decide_consumer
+      
+    - name: router_intake_inflight_messages_max
+      type: gauge
+      description: "Maximum in-flight messages (peak)"
+      labels:
+        - subject
+      component: router
+      language: erlang
+      module: router_decide_consumer
+      
+    # Backpressure metrics (CP2+)
+    - name: router_intake_backpressure_active
+      type: gauge
+      description: "Backpressure status (1=active, 0=inactive)"
+      labels:
+        - subject
+      component: router
+      language: erlang
+      module: router_intake_backpressure
+      
+    - name: router_intake_backpressure_triggered_total
+      type: counter
+      description: "Backpressure trigger events"
+      labels:
+        - subject
+        - trigger
+      component: router
+      language: erlang
+      module: router_intake_backpressure
+      
+    - name: router_intake_backpressure_rejections_total
+      type: counter
+      description: "Rejected messages due to backpressure"
+      labels:
+        - subject
+        - reason
+      component: router
+      language: erlang
+      module: router_intake_backpressure
+
+  # Gateway (C)
+  gateway:
+    # Rate limiting metrics
+    - name: gateway_rate_limit_hits_total
+      type: counter
+      description: "Total rate limit checks"
+      labels:
+        - endpoint
+        - tenant_id
+      component: gateway
+      language: c
+      module: metrics_registry
+      
+    - name: gateway_rate_limit_allowed_total
+      type: counter
+      description: "Requests allowed by rate limiter"
+      labels:
+        - endpoint
+        - tenant_id
+      component: gateway
+      language: c
+      module: metrics_registry
+      
+    # HTTP metrics
+    - name: gateway_http_requests_total
+      type: counter
+      description: "Total HTTP requests"
+      labels:
+        - method
+        - path
+        - status
+      component: gateway
+      language: c
+      module: metrics_registry
+      
+    - name: gateway_http_request_duration_seconds
+      type: histogram
+      description: "HTTP request latency"
+      labels:
+        - method
+        - path
+      buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0]
+      component: gateway
+      language: c
+      module: metrics_registry
+      
+    - name: gateway_http_requests_by_status
+      type: counter
+      description: "HTTP requests by status code"
+      labels:
+        - status
+      component: gateway
+      language: c
+      module: metrics_registry
+      
+    # NATS metrics
+    - name: gateway_nats_messages_sent_total
+      type: counter
+      description: "NATS messages sent"
+      labels:
+        - subject
+      component: gateway
+      language: c
+      module: metrics_registry
+      
+    - name: gateway_nats_publish_failures_total
+      type: counter
+      description: "NATS publish failures"
+      labels:
+        - subject
+        - error
+      component: gateway
+      language: c
+      module: metrics_registry
+      
+    - name: gateway_nats_connection_status
+      type: gauge
+      description: "NATS connection status (1=connected, 0=disconnected)"
+      labels: []
+      component: gateway
+      language: c
+      module: metrics_registry
+
+  # Provider (Erlang/OTP)
+  provider:
+    - name: beamline_provider_invocations_total
+      type: counter
+      description: "Provider invocations"
+      labels:
+        - provider
+        - status
+      component: provider
+      language: erlang
+      module: provider_metrics
+      
+    - name: beamline_provider_latency_seconds
+      type: histogram
+      description: "Provider response latency"
+      labels:
+        - provider
+      buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0]
+      component: provider
+      language: erlang
+      module: provider_metrics
+      
+    - name: beamline_provider_cost_total
+      type: counter
+      description: "Accumulated cost"
+      labels:
+        - provider
+        - currency
+      component: provider
+      language: erlang
+      module: provider_metrics
+
+  # Ingress (C++ CAF)
+  ingress:
+    - name: beamline_ingress_messages_total
+      type: counter
+      description: "Incoming messages"
+      labels:
+        - tenant_id
+        - status
+      component: ingress
+      language: cpp
+      module: ingress_metrics
+      
+    - name: beamline_ingress_bandwidth_bytes
+      type: counter
+      description: "Bandwidth usage"
+      labels:
+        - tenant_id
+      component: ingress
+      language: cpp
+      module: ingress_metrics
+      
+    - name: beamline_ingress_queue_size
+      type: gauge
+      description: "Queue size"
+      labels: []
+      component: ingress
+      language: cpp
+      module: ingress_metrics
+
+  # Usage (Erlang/OTP)
+  usage:
+    - name: beamline_usage_events_total
+      type: counter
+      description: "Usage events"
+      labels:
+        - tenant_id
+        - event_type
+      component: usage
+      language: erlang
+      module: usage_metrics
+      
+    - name: beamline_usage_quota_remaining
+      type: gauge
+      description: "Remaining quota"
+      labels:
+        - tenant_id
+      component: usage
+      language: erlang
+      module: usage_metrics
+
+# SLO Definitions
+slo:
+  availability:
+    target: 99.9
+    unit: percent
+    window: 30d
+    
+  latency:
+    target: 500
+    unit: milliseconds
+    percentile: p95
+    component: router
+    
+  error_rate:
+    target: 0.1
+    unit: percent
+    window: 5m
+    component: router
+    
+  throughput:
+    target: 1000
+    unit: requests_per_second
+    component: router
+

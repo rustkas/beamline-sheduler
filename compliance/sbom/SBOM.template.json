@@ -1,0 +1,35 @@
+{
+  "name": "beamline-constructor",
+  "version": "1.0.0",
+  "description": "Software Bill of Materials for Beamline Constructor",
+  "format": "spdx-2.3",
+  "created": "2025-11-06T12:00:00Z",
+  "components": [
+    {
+      "name": "express",
+      "version": "4.18.2",
+      "license": "MIT",
+      "type": "library",
+      "purl": "pkg:npm/express@4.18.2",
+      "notes": "Web application framework - placeholder"
+    },
+    {
+      "name": "cowboy",
+      "version": "2.9.0",
+      "license": "ISC",
+      "type": "library",
+      "purl": "pkg:hex/cowboy@2.9.0",
+      "notes": "Erlang HTTP server - placeholder"
+    },
+    {
+      "name": "lodash",
+      "version": "4.17.21",
+      "license": "MIT",
+      "type": "library",
+      "purl": "pkg:npm/lodash@4.17.21",
+      "notes": "JavaScript utility library - placeholder"
+    }
+  ],
+  "notes": "This is a template SBOM with placeholder components. Real dependencies will be added as they are integrated into the project. All component licenses must be in the allowlist defined in compliance/licenses/REGISTRY.md"
+}
+

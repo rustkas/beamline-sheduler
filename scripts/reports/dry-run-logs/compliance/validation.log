@@ -1,0 +1,27 @@
+==========================================
+Compliance Validation Log
+Started: 2025-11-06T15:04:55Z
+==========================================
+
+[2025-11-06T15:04:55Z] [INFO] Starting compliance validation
+[2025-11-06T15:04:55Z] [INFO] ==========================================
+[2025-11-06T15:04:55Z] [INFO] Compliance Validation
+[2025-11-06T15:04:55Z] [INFO] ==========================================
+[2025-11-06T15:04:55Z] [INFO] 
+[2025-11-06T15:04:55Z] [INFO] Checking compliance structure...
+[2025-11-06T15:04:55Z] [ERROR] Missing required file: compliance/licenses/REGISTRY.md
+[2025-11-06T15:04:55Z] [ERROR] Missing required file: compliance/privacy/POLICY.md
+[2025-11-06T15:04:55Z] [ERROR] Missing required file: compliance/sbom/SBOM.template.json
+[2025-11-06T15:04:55Z] [ERROR] Missing 3 required file(s)
+[2025-11-06T15:04:55Z] [INFO] Checking file structure...
+[2025-11-06T15:04:55Z] [INFO] Checking for secrets in compliance artifacts...
+[2025-11-06T15:04:55Z] [INFO] No secrets detected in compliance artifacts
+[2025-11-06T15:04:55Z] [INFO] Checking links...
+[2025-11-06T15:04:55Z] [WARN] check_links_v2.ps1 not found, skipping link check
+[2025-11-06T15:04:55Z] [INFO] Generating summary...
+[2025-11-06T15:04:55Z] [INFO] Summary saved to: /home/rustkas/aigroup/scripts/reports/dry-run-logs/compliance/summary.json
+[2025-11-06T15:04:55Z] [INFO] 
+[2025-11-06T15:04:55Z] [INFO] ==========================================
+[2025-11-06T15:04:55Z] [INFO] Validation completed
+[2025-11-06T15:04:55Z] [INFO] Exit code: 3
+[2025-11-06T15:04:55Z] [INFO] ==========================================

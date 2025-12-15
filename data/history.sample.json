@@ -1,0 +1,39 @@
+[
+  {
+    "ts": "2025-01-27T12:00:00Z",
+    "actor": "AGENT_1_REPO_STATE",
+    "action": "init_cp",
+    "cp_from": null,
+    "cp_to": "CP0-LC",
+    "state_checksum": "4e5115fa44400a10d16cfab9ff5a3a7e30921647342ec95ae230e545c87b809e",
+    "hmac_prev": "",
+    "hmac": "68b349af2ee0a3b7a1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4",
+    "metadata": {}
+  },
+  {
+    "ts": "2025-01-27T13:00:00Z",
+    "actor": "AGENT_2_ROUTER_CORE",
+    "action": "artifact_update",
+    "cp_from": "CP0-LC",
+    "cp_to": "CP0-LC",
+    "state_checksum": "6a8b5df2de4134560426c574bfa9b4f33a92f328a60ef7d0139c8eec112cdf5f",
+    "hmac_prev": "68b349af2ee0a3b7a1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4",
+    "hmac": "9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8a",
+    "metadata": {
+      "artifacts_added": ["docs/ADR_INDEX.md"]
+    }
+  },
+  {
+    "ts": "2025-01-27T14:00:00Z",
+    "actor": "AGENT_3_PROVIDER_ADAPTERS",
+    "action": "artifact_update",
+    "cp_from": "CP0-LC",
+    "cp_to": "CP0-LC",
+    "state_checksum": "8079122fc3886fa13e453cf85b804f24ef52e5ddd78b5e05a2643dcd85ca8920",
+    "hmac_prev": "9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8a",
+    "hmac": "c17dd9010a5c6b0e5b2ad5a845762d8b206e6166a4e63d32deca8c5664fdfcac",
+    "metadata": {
+      "artifacts_added": ["apps/gateway/src/main.ts"]
+    }
+  }
+]

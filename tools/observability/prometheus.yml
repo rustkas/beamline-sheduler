@@ -1,0 +1,45 @@
+# Prometheus Configuration for Local Development
+# Scrapes metrics from all Beamline components
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'local'
+    env: 'development'  # Changed from 'environment' to 'env' for consistency with alert routing
+
+# Alert rules
+rule_files:
+  - "../apps/otp/router/docs/observability/router-alert-rules.yaml"
+
+scrape_configs:
+  # Router (Erlang/OTP)
+  - job_name: 'router'
+    static_configs:
+      - targets: ['host.docker.internal:9091']
+        labels:
+          component: 'router'
+          language: 'erlang'
+
+  # Gateway (NestJS)
+  - job_name: 'gateway'
+    static_configs:
+      - targets: ['host.docker.internal:3000']
+        labels:
+          component: 'gateway'
+          language: 'typescript'
+    metrics_path: '/metrics'
+
+  # Ingress (C++ CAF)
+  - job_name: 'ingress'
+    static_configs:
+      - targets: ['host.docker.internal:9092']
+        labels:
+          component: 'ingress'
+          language: 'cpp'
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+

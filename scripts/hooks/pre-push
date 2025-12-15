@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# Pre-push hook for DevState verification
+# Performs comprehensive validation before push (strict No-Drift enforcement)
+# Fast path: skips if no DevState files are being pushed
+
+set -euo pipefail
+
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$PROJECT_ROOT"
+
+# Verbose mode and OS-specific hints
+VERBOSE="${VERBOSE:-false}"
+OS="$(uname -s 2>/dev/null || echo unknown)"
+case "$OS" in
+  Darwin)
+    OS_NAME="macOS"
+    PKG_HINT="brew install jq && pip3 install jsonschema"
+    ;;
+  Linux)
+    OS_NAME="Linux"
+    PKG_HINT="sudo apt-get update && sudo apt-get install -y jq && pip install jsonschema"
+    ;;
+  *)
+    OS_NAME="$OS"
+    PKG_HINT="Install jq and jsonschema via your package manager"
+    ;;
+esac
+BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+PROTECTED_BRANCHES=${PROTECTED_BRANCHES:-"main develop"}
+is_protected=false
+for b in $PROTECTED_BRANCHES; do
+  if [ "$BRANCH" = "$b" ]; then
+    is_protected=true
+    break
+  fi
+done
+
+if [ "${SKIP_DEVSTATE_GATES:-false}" = "true" ]; then
+  if [ "${CI:-false}" = "true" ] || [ "${DEVSTATE_BYPASS_ROLE:-}" = "admin" ]; then
+    if [ "$is_protected" = "true" ]; then
+      echo "[FAIL] Bypass disabled on protected branch ($BRANCH)" >&2
+      exit 1
+    fi
+    echo "[WARN] DevState gates skipped (authorized bypass: ${CI:+CI}${DEVSTATE_BYPASS_ROLE:+, role=$DEVSTATE_BYPASS_ROLE})" >&2
+    exit 0
+  else
+    echo "[FAIL] Unauthorized bypass attempt (SKIP_DEVSTATE_GATES)" >&2
+    exit 1
+  fi
+fi
+
+# Hard gate: block if .trae/* files are tracked in Git (should not be tracked)
+if git ls-files -- ".trae/*" | grep -q .; then
+  echo "[FAIL] Error: .trae files are tracked in Git" >&2
+  echo "[FAIL] .trae/state.json and .trae/history.json should NOT be tracked in Git" >&2
+  echo "[FAIL] Remove from Git: git rm --cached .trae/state.json .trae/history.json" >&2
+  exit 1
+fi
+
+# Repository checks: skip verification if no commits or no origin
+if ! git rev-parse --verify HEAD >/dev/null 2>&1 || ! git remote get-url origin >/dev/null 2>&1; then
+  exit 0
+fi
+
+# Check if DevState files are being pushed
+# Get list of files being pushed (compare local and remote)
+PUSHED_DEVSTATE_FILES=$(git diff --name-only origin/$(git rev-parse --abbrev-ref HEAD) HEAD 2>/dev/null | grep -E '^\.trae/(state|history)\.json$' || true)
+
+# Also check if files are in commits being pushed
+while read -r commit; do
+  COMMIT_FILES=$(git diff-tree --no-commit-id --name-only -r "$commit" | grep -E '^\.trae/(state|history)\.json$' || true)
+  if [ -n "$COMMIT_FILES" ]; then
+    PUSHED_DEVSTATE_FILES="$PUSHED_DEVSTATE_FILES"$'\n'"$COMMIT_FILES"
+  fi
+done < <(git rev-list origin/$(git rev-parse --abbrev-ref HEAD)..HEAD 2>/dev/null || echo "")
+
+# Remove duplicates and empty lines
+PUSHED_DEVSTATE_FILES=$(echo "$PUSHED_DEVSTATE_FILES" | grep -v '^$' | sort -u)
+
+if [ -z "$PUSHED_DEVSTATE_FILES" ]; then
+  # No DevState files being pushed, skip verification (fast path)
+  exit 0
+fi
+
+# DevState files are being pushed, run comprehensive verification
+echo "[DevState] Pre-push: Running comprehensive DevState verification..."
+if [ "$VERBOSE" = "true" ]; then
+  echo "[INFO] OS=$OS_NAME"
+  echo "[INFO] DevState files in push:" && echo "$PUSHED_DEVSTATE_FILES" | sed 's/^/  - /'
+fi
+
+# Check if DevState service is running (warn if not, but proceed with local validation)
+DEVSTATE_URL="${DEVSTATE_URL:-http://localhost:3180}"
+DEVSTATE_FALLBACK_URL="${DEVSTATE_FALLBACK_URL:-http://localhost:3080}"
+
+DEVSTATE_AVAILABLE=false
+if curl -fsS --connect-timeout 2 --max-time 3 "${DEVSTATE_URL}/health" >/dev/null 2>&1 || curl -fsS --connect-timeout 2 --max-time 3 "${DEVSTATE_FALLBACK_URL}/health" >/dev/null 2>&1; then
+  DEVSTATE_AVAILABLE=true
+  echo "[INFO] DevState service is running"
+else
+  echo "[WARN] DevState service not running (will use local validation only)"
+  echo "[HINT] Start DevState with: make devstate-up"
+  echo "[HINT] Proceeding with local validation only..."
+  if [ "$VERBOSE" = "true" ]; then
+    echo "[HINT] $OS_NAME setup: $PKG_HINT"
+  fi
+fi
+
+# Step 1: DevState verification (local + API if available)
+if [ -f "devstate-tools/devstate/scripts/devstate_verify.sh" ]; then
+  export SKIP_LOCAL_VALIDATION="${SKIP_LOCAL_VALIDATION:-false}"
+  
+  if ! bash devstate-tools/devstate/scripts/devstate_verify.sh; then
+    echo "[FAIL] DevState verification failed - push blocked" >&2
+    echo "[HINT] Fix DevState issues before pushing" >&2
+    echo "[HINT] If local tools missing, install: pip install jsonschema" >&2
+    if [ "$VERBOSE" = "true" ]; then
+      echo "[INFO] Env DEVSTATE_URL=${DEVSTATE_URL:-unset} SKIP_LOCAL_VALIDATION=${SKIP_LOCAL_VALIDATION:-false}"
+    fi
+    exit 1
+  fi
+  echo "[OK] DevState verification passed"
+else
+  echo "[WARN] devstate-tools/devstate/scripts/devstate_verify.sh not found"
+fi
+
+# Step 2: Full state validation (schema, checksums)
+if [ -f "scripts/validate_state.sh" ]; then
+  echo "[INFO] Running full state validation (schema, checksums)..."
+  if ! bash scripts/validate_state.sh; then
+    echo "[FAIL] State validation failed - push blocked" >&2
+    echo "[FAIL] Fix state validation issues before pushing" >&2
+    exit 1
+  fi
+  echo "[OK] State validation passed"
+else
+  echo "[WARN] scripts/validate_state.sh not found, skipping state validation"
+fi
+
+# Step 3: HMAC chain verification (if script exists)
+if [ -f "scripts/verify_hmac_chain.py" ]; then
+  echo "[INFO] Running HMAC chain verification..."
+  if ! python3 scripts/verify_hmac_chain.py --verbose; then
+    echo "[FAIL] HMAC chain verification failed - push blocked" >&2
+    echo "[FAIL] Fix HMAC chain issues before pushing" >&2
+    exit 1
+  fi
+  echo "[OK] HMAC chain verification passed"
+else
+  echo "[WARN] scripts/verify_hmac_chain.py not found, skipping HMAC chain verification"
+fi
+
+# All verifications passed
+echo "[OK] All DevState pre-push verifications passed"
+exit 0

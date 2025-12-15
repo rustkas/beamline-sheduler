@@ -1,0 +1,107 @@
+syntax = "proto3";
+package beamline.flow.v1;
+
+message Message {
+  string message_id = 1;
+  string tenant_id = 2;
+  string trace_id = 3;
+  string message_type = 4;
+  bytes payload = 5;
+  map<string, string> metadata = 6;
+  int64 timestamp_ms = 7;
+}
+
+message RouteRequest {
+  Message message = 1;
+  string policy_id = 2;
+  map<string, string> context = 3;
+}
+
+message RouteDecision {
+  string provider_id = 1;
+  string reason = 2;
+  int32 priority = 3;
+  int64 expected_latency_ms = 4;
+  double expected_cost = 5;
+  map<string, string> metadata = 6;
+}
+
+message UpsertPolicyRequest {
+  string tenant_id = 1;
+  AdminPolicy policy = 2;
+}
+
+message UpsertPolicyResponse {
+  bool ok = 1;
+}
+
+message DeletePolicyRequest {
+  string tenant_id = 1;
+  string policy_id = 2;
+}
+
+message DeletePolicyResponse {
+  bool ok = 1;
+}
+
+message GetPolicyRequest {
+  string tenant_id = 1;
+  string policy_id = 2;
+}
+
+message GetPolicyResponse {
+  AdminPolicy policy = 1;
+}
+
+message ListPoliciesRequest {
+  string tenant_id = 1;
+}
+
+message ListPoliciesResponse {
+  repeated AdminPolicy policies = 1;
+}
+
+message AdminPolicy {
+  string policy_id = 1;
+  repeated AdminProvider providers = 2;
+  bool sticky = 3;
+  repeated AdminRule rules = 4;
+}
+
+message AdminProvider {
+  string id = 1;
+  double weight = 2;
+}
+
+message AdminRule {
+  string match = 1;
+  repeated string prefer = 2;
+  string fallback = 3;
+}
+
+message GetCheckpointStatusRequest {}
+
+message CheckpointStatus {
+  string current_cp = 1;
+  bool cp2_plus_allowed = 2;
+  int64 updated_at_ms = 3;
+}
+
+message GetCheckpointStatusResponse {
+  CheckpointStatus status = 1;
+}
+
+message GetValidatorsHealthRequest {
+    string tenant_id = 1;
+}
+
+message ValidatorStatus {
+    string name = 1;
+    string status = 2;
+    int64 timestamp_ms = 3;
+    string details = 4;
+}
+
+message GetValidatorsHealthResponse {
+    repeated ValidatorStatus validators = 1;
+}

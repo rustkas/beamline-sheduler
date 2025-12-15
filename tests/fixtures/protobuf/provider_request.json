@@ -1,0 +1,16 @@
+{
+  "provider_id": "anthropic",
+  "message_id": "test-message-001",
+  "tenant_id": "test-tenant-001",
+  "trace_id": "test-trace-001",
+  "body": "SGVsbG8gV29ybGQ=",
+  "parameters": {
+    "model": "gpt-4",
+    "temperature": "0.7"
+  },
+  "metadata": {
+    "source": "test"
+  },
+  "timestamp_ms": 1706361600000
+}
+

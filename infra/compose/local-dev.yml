@@ -1,0 +1,167 @@
+version: '3.9'
+
+# Beamline Constructor - Local Development Stack
+# Services: PostgreSQL, NATS, Router (Erlang/OTP), Gateway (NestJS)
+
+networks:
+  beamline_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  router_data:
+    driver: local
+  gateway_data:
+    driver: local
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: beamline-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-beamline}
+      POSTGRES_USER: ${DB_USER:-beamline}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dev_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    networks:
+      - beamline_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-beamline} -d ${DB_NAME:-beamline}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  # NATS Message Broker
+  nats:
+    image: nats:2.10-alpine
+    container_name: beamline-nats
+    command:
+      - "-js"
+      - "-m"
+      - "8222"
+      - "-p"
+      - "4222"
+      - "-D"
+    ports:
+      - "${NATS_PORT:-4222}:4222"
+      - "${NATS_MONITOR_PORT:-8222}:8222"
+    networks:
+      - beamline_net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  # Router (Erlang/OTP gRPC)
+  router:
+    build:
+      context: ../../apps/otp/router
+      dockerfile: Dockerfile
+    container_name: beamline-router
+    ports:
+      - "${ROUTER_GRPC_PORT:-9000}:9000"
+    environment:
+      - GRPC_PORT=${ROUTER_GRPC_PORT:-9000}
+      - NATS_URL=${NATS_URL:-nats://nats:4222}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-beamline}
+      - DB_USER=${DB_USER:-beamline}
+      - DB_PASSWORD=${DB_PASSWORD:-dev_password}
+      - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
+    volumes:
+      - router_data:/app/data
+    networks:
+      - beamline_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:9000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # Gateway (NestJS REST/SSE API)
+  gateway:
+    build:
+      context: ../../apps/gateway
+      dockerfile: Dockerfile
+    container_name: beamline-gateway
+    ports:
+      - "${GATEWAY_PORT:-8080}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=${GATEWAY_PORT:-3000}
+      - HOST=${GATEWAY_HOST:-0.0.0.0}
+      - ROUTER_GRPC_URL=${ROUTER_GRPC_URL:-router:9000}
+      - NATS_URL=${NATS_URL:-nats://nats:4222}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-beamline}
+      - DB_USER=${DB_USER:-beamline}
+      - DB_PASSWORD=${DB_PASSWORD:-dev_password}
+      - HMAC_SECRET=${HMAC_SECRET:-dev-secret-not-for-prod}
+      - DEVSTATE_BASE_URL=${DEVSTATE_BASE_URL:-http://trae-devstate:3080}
+    volumes:
+      - gateway_data:/app/data
+    networks:
+      - beamline_net
+    depends_on:
+      router:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      devstate:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # DevState HTTP (Express wrapper for MCP server)
+  devstate:
+    build:
+      context: ../../
+      dockerfile: infra/docker/devstate/Dockerfile
+    container_name: trae-devstate
+    environment:
+      - DATABASE_URL=postgresql://beamline:dev_password@postgres:5432/beamline
+      - DB_SCHEMA=${DB_SCHEMA:-public}
+      - HMAC_SECRET=${HMAC_SECRET:-dev-secret-not-for-prod}
+      - DEVSTATE_HTTP_PORT=3080
+    networks:
+      - beamline_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3080:3080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "-", "http://localhost:3080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped

@@ -1,0 +1,65 @@
+# Docker Compose for Extensions E2E Testing
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.extensions.yml up
+
+services:
+  # Extension Services (Node.js)
+  extension-normalize-text:
+    build:
+      context: ./tools/extensions
+      dockerfile: Dockerfile
+    container_name: extension-normalize-text
+    environment:
+      - NATS_URL=nats://nats:4222
+    command: node src/normalize_text.js
+    networks:
+      - beamline_net
+    depends_on:
+      nats:
+        condition: service_healthy
+    restart: unless-stopped
+
+  extension-pii-guard:
+    build:
+      context: ./tools/extensions
+      dockerfile: Dockerfile
+    container_name: extension-pii-guard
+    environment:
+      - NATS_URL=nats://nats:4222
+    command: node src/pii_guard.js
+    networks:
+      - beamline_net
+    depends_on:
+      nats:
+        condition: service_healthy
+    restart: unless-stopped
+
+  extension-mask-pii:
+    build:
+      context: ./tools/extensions
+      dockerfile: Dockerfile
+    container_name: extension-mask-pii
+    environment:
+      - NATS_URL=nats://nats:4222
+    command: node src/mask_pii.js
+    networks:
+      - beamline_net
+    depends_on:
+      nats:
+        condition: service_healthy
+    restart: unless-stopped
+
+  extension-test-provider:
+    build:
+      context: ./tools/extensions
+      dockerfile: Dockerfile
+    container_name: extension-test-provider
+    environment:
+      - NATS_URL=nats://nats:4222
+    command: node src/test_provider.js
+    networks:
+      - beamline_net
+    depends_on:
+      nats:
+        condition: service_healthy
+    restart: unless-stopped
+

@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "description": "Structured JSON logging format for Beamline Constructor (MVP)",
+  "format": {
+    "type": "object",
+    "required": ["timestamp", "level", "component", "message"],
+    "properties": {
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO 8601 timestamp (UTC)",
+        "example": "2025-01-27T12:00:00Z"
+      },
+      "level": {
+        "type": "string",
+        "enum": ["ERROR", "WARN", "INFO", "DEBUG"],
+        "description": "Log level: ERROR (critical), WARN (warnings), INFO (normal), DEBUG (detailed)"
+      },
+      "component": {
+        "type": "string",
+        "description": "Component identifier (router, provider, ingress, gateway, usage, worker)",
+        "examples": ["router", "provider", "ingress", "gateway", "usage", "worker"]
+      },
+      "message": {
+        "type": "string",
+        "description": "Human-readable log message"
+      },
+      "context": {
+        "type": "object",
+        "description": "Additional structured context (optional)",
+        "additionalProperties": true
+      },
+      "tenant_id": {
+        "type": "string",
+        "description": "Tenant identifier (required for CP1 when tenant context is available)"
+      },
+      "run_id": {
+        "type": "string",
+        "description": "Run identifier for tracking execution flow (required for CP1 when run context is available)"
+      },
+      "flow_id": {
+        "type": "string",
+        "description": "Flow identifier for workflow tracking (required for CP1 when flow context is available)"
+      },
+      "step_id": {
+        "type": "string",
+        "description": "Step identifier within a flow (required for CP1 when step context is available)"
+      },
+      "trace_id": {
+        "type": "string",
+        "description": "Trace identifier for distributed tracing (required for CP1 when trace context is available)"
+      },
+      "error_code": {
+        "type": "string",
+        "description": "Error code for structured error handling (optional, for ERROR level)"
+      },
+      "latency_ms": {
+        "type": "number",
+        "description": "Operation latency in milliseconds (optional, for performance tracking)"
+      },
+      "error": {
+        "type": "object",
+        "description": "Error details (optional, for ERROR level)",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Error type/class"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "stack": {
+            "type": "string",
+            "description": "Stack trace (optional, for DEBUG level)"
+          }
+        }
+      }
+    }
+  },
+  "levels": {
+    "ERROR": {
+      "description": "Critical errors requiring immediate attention",
+      "examples": ["Service unavailable", "Database connection failed", "Authentication failed"]
+    },
+    "WARN": {
+      "description": "Warnings and potential issues",
+      "examples": ["High latency detected", "Quota approaching limit", "Fallback used"]
+    },
+    "INFO": {
+      "description": "Informational messages about normal operations",
+      "examples": ["Request processed", "Service started", "Configuration loaded"]
+    },
+    "DEBUG": {
+      "description": "Detailed debugging information",
+      "examples": ["Cache hit/miss", "Algorithm step", "Internal state"]
+    }
+  },
+  "cp1_required_fields": {
+    "description": "CP1 cross-cutting observability invariants: fields that must be included when context is available",
+    "when_tenant_available": ["tenant_id"],
+    "when_run_available": ["run_id"],
+    "when_flow_available": ["flow_id"],
+    "when_step_available": ["step_id"],
+    "when_trace_available": ["trace_id"],
+    "note": "These fields are not always required, but must be included when the corresponding context is available in the component"
+  },
+  "pii_filtering": {
+    "enabled": true,
+    "fields": [
+      "password",
+      "api_key",
+      "secret",
+      "token",
+      "access_token",
+      "refresh_token",
+      "authorization",
+      "credit_card",
+      "ssn",
+      "email",
+      "phone"
+    ],
+    "replacement": "[REDACTED]"
+  },
+  "health_endpoint": {
+    "path": "/_health",
+    "method": "GET",
+    "description": "Health check endpoint for all components",
+    "response": {
+      "type": "object",
+      "required": ["status", "timestamp"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["healthy", "degraded", "unhealthy"],
+          "description": "Service health status"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Health check timestamp"
+        },
+        "checks": {
+          "type": "object",
+          "description": "Individual health checks (optional)",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["ok", "fail"]
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

@@ -1,0 +1,18 @@
+[
+  {
+    "ts": "2025-11-05T09:37:52Z",
+    "actor": "AGENT_1_REPO_STATE",
+    "action": "init_cp0",
+    "cp_from": null,
+    "cp_to": "CP0-LC",
+    "state_checksum": "c26790745097a526243a555c8e9c5015293a6fb7d69184e59e31af3303f26c1c",
+    "hmac_prev": "",
+    "hmac": "68b349af2ee0a3b7422c27cd0159bfa6a11eb8237d76d9935559c4da573f69fa",
+    "metadata": {
+      "description": "Initialization of CP0-LC checkpoint",
+      "artifacts_count": 10,
+      "version": "1.0"
+    }
+  }
+]
+

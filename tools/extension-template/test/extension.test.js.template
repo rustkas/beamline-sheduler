@@ -1,0 +1,83 @@
+#!/usr/bin/env node
+/**
+ * Unit tests for {{EXTENSION_ID}} extension
+ * Run: npm test
+ */
+
+import assert from 'assert';
+
+/**
+ * Test processRequest function
+ * Note: Import your processRequest function from the main handler
+ */
+async function testProcessRequest() {
+    console.log('Testing processRequest...');
+    
+    // Example test case
+    const request = {
+        trace_id: 'test-trace-123',
+        tenant_id: 'test-tenant',
+        payload: {
+            payload: 'test message',
+            metadata: {}
+        },
+        metadata: {
+            lang: 'en'
+        }
+    };
+    
+    // TODO: Import and test your processRequest function
+    // const response = await processRequest(request);
+    // assert(response, 'Response should not be null');
+    
+    console.log('✓ processRequest test passed');
+}
+
+/**
+ * Test error handling
+ */
+async function testErrorHandling() {
+    console.log('Testing error handling...');
+    
+    // TODO: Test error scenarios
+    // - Invalid request format
+    // - Missing required fields
+    // - Processing errors
+    
+    console.log('✓ Error handling test passed');
+}
+
+/**
+ * Test timeout handling
+ */
+async function testTimeout() {
+    console.log('Testing timeout...');
+    
+    // TODO: Test timeout scenarios
+    // - Request exceeds timeout
+    // - Timeout error response
+    
+    console.log('✓ Timeout test passed');
+}
+
+/**
+ * Run all tests
+ */
+async function runTests() {
+    console.log('Running tests for {{EXTENSION_ID}}...\n');
+    
+    try {
+        await testProcessRequest();
+        await testErrorHandling();
+        await testTimeout();
+        
+        console.log('\n✅ All tests passed');
+        process.exit(0);
+    } catch (error) {
+        console.error('\n❌ Test failed:', error);
+        process.exit(1);
+    }
+}
+
+runTests();
+

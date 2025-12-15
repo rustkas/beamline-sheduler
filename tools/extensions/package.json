@@ -1,0 +1,29 @@
+{
+  "name": "beamline-extensions",
+  "version": "1.0.0",
+  "description": "Reference extensions for Beamline Router E2E testing",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start:normalize_text": "node src/normalize_text.js",
+    "start:pii_guard": "node src/pii_guard.js",
+    "start:mask_pii": "node src/mask_pii.js",
+    "start:test_provider": "node src/test_provider.js",
+    "start:all": "concurrently \"npm:start:normalize_text\" \"npm:start:pii_guard\" \"npm:start:mask_pii\" \"npm:start:test_provider\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "beamline",
+    "extensions",
+    "nats"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "nats": "^2.20.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+

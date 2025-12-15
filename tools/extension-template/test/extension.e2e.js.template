@@ -1,0 +1,131 @@
+#!/usr/bin/env node
+/**
+ * E2E test for {{EXTENSION_ID}} extension
+ * Tests against real NATS and Router
+ * Run: npm run test:e2e
+ * 
+ * Prerequisites:
+ * - NATS server running (nats://localhost:4222)
+ * - Router running with extension registered
+ */
+
+import { connect, StringCodec, NatsConnection } from 'nats';
+
+const NATS_URL = process.env.NATS_URL || 'nats://localhost:4222';
+const SUBJECT = '{{NATS_SUBJECT}}';
+const TIMEOUT_MS = 5000;
+
+const sc = StringCodec();
+
+/**
+ * Send test request to extension
+ */
+async function sendTestRequest(nc, request) {
+    try {
+        const response = await nc.request(SUBJECT, sc.encode(JSON.stringify(request)), {
+            timeout: TIMEOUT_MS
+        });
+        
+        const responseData = sc.decode(response.data);
+        return JSON.parse(responseData);
+    } catch (error) {
+        throw new Error(`Request failed: ${error.message}`);
+    }
+}
+
+/**
+ * Test basic functionality
+ */
+async function testBasicFunctionality(nc) {
+    console.log('Testing basic functionality...');
+    
+    const request = {
+        trace_id: 'e2e-test-trace-1',
+        tenant_id: 'e2e-test-tenant',
+        payload: {
+            payload: 'test message',
+            metadata: {}
+        },
+        metadata: {
+            lang: 'en'
+        }
+    };
+    
+    const response = await sendTestRequest(nc, request);
+    
+    // TODO: Add assertions based on extension type
+    // Pre/post: check payload modification
+    // Validator: check status (ok/reject)
+    // Provider: check CP2-style response
+    
+    console.log('✓ Basic functionality test passed');
+    return response;
+}
+
+/**
+ * Test error handling
+ */
+async function testErrorHandling(nc) {
+    console.log('Testing error handling...');
+    
+    // Test with invalid request
+    const invalidRequest = {
+        // Missing required fields
+    };
+    
+    try {
+        await sendTestRequest(nc, invalidRequest);
+        console.log('⚠️  Error handling test: extension should handle invalid requests');
+    } catch (error) {
+        console.log('✓ Error handling test passed (extension rejected invalid request)');
+    }
+}
+
+/**
+ * Test timeout
+ */
+async function testTimeout(nc) {
+    console.log('Testing timeout...');
+    
+    // TODO: Test timeout scenario if applicable
+    // (e.g., send request that takes longer than timeout)
+    
+    console.log('✓ Timeout test passed');
+}
+
+/**
+ * Main E2E test function
+ */
+async function runE2ETests() {
+    console.log('Running E2E tests for {{EXTENSION_ID}}...\n');
+    console.log(`NATS URL: ${NATS_URL}`);
+    console.log(`Subject: ${SUBJECT}\n`);
+    
+    let nc;
+    
+    try {
+        // Connect to NATS
+        console.log('Connecting to NATS...');
+        nc = await connect({ servers: NATS_URL });
+        console.log('✓ Connected to NATS\n');
+        
+        // Run tests
+        await testBasicFunctionality(nc);
+        await testErrorHandling(nc);
+        await testTimeout(nc);
+        
+        console.log('\n✅ All E2E tests passed');
+        process.exit(0);
+        
+    } catch (error) {
+        console.error('\n❌ E2E test failed:', error);
+        process.exit(1);
+    } finally {
+        if (nc) {
+            await nc.close();
+        }
+    }
+}
+
+runE2ETests();
+

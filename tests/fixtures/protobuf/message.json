@@ -1,0 +1,13 @@
+{
+  "message_id": "test-message-001",
+  "tenant_id": "test-tenant-001",
+  "trace_id": "test-trace-001",
+  "message_type": "chat",
+  "payload": "SGVsbG8gV29ybGQ=",
+  "metadata": {
+    "source": "test",
+    "priority": "normal"
+  },
+  "timestamp_ms": 1706361600000
+}
+

@@ -1,0 +1,223 @@
+#!/usr/bin/env node
+/**
+ * {{EXTENSION_NAME}} Extension
+ * Type: {{EXTENSION_TYPE}}
+ * Subject: {{NATS_SUBJECT}}
+ * 
+ * {{EXTENSION_DESCRIPTION}}
+ * 
+ * Contract: See docs/EXTENSIONS_API.md
+ */
+
+import { connect, StringCodec } from 'nats';
+
+const SUBJECT = '{{NATS_SUBJECT}}';
+const NATS_URL = process.env.NATS_URL || 'nats://localhost:4222';
+const TIMEOUT_MS = parseInt(process.env.EXTENSION_TIMEOUT_MS || '{{TIMEOUT_MS}}', 10);
+
+const sc = StringCodec();
+
+/**
+ * Process extension request
+ * @param {Object} request - Request object from Router
+ * @returns {Object} Response object
+ */
+async function processRequest(request) {
+    // Extract request fields
+    const payload = request.payload || {};
+    const metadata = request.metadata || {};
+    const traceId = request.trace_id;
+    const tenantId = request.tenant_id;
+    
+    // Log request (structured logging)
+    console.log(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: 'INFO',
+        component: '{{EXTENSION_ID}}',
+        message: 'Processing request',
+        trace_id: traceId,
+        tenant_id: tenantId,
+        request_size: JSON.stringify(request).length
+    }));
+    
+    const startTime = Date.now();
+    
+    try {
+        // TODO: Implement your extension logic here
+        // For pre/post processors: modify payload
+        // For validators: return {status: 'ok' | 'reject', reason?, details?}
+        // For providers: return CP2-style provider response
+        
+        // Extension-specific logic
+        {{EXTENSION_LOGIC}}
+        
+        const latencyMs = Date.now() - startTime;
+        
+        // Log success
+        console.log(JSON.stringify({
+            timestamp: new Date().toISOString(),
+            level: 'INFO',
+            component: '{{EXTENSION_ID}}',
+            message: 'Request processed successfully',
+            trace_id: traceId,
+            tenant_id: tenantId,
+            latency_ms: latencyMs
+        }));
+        
+        return response;
+        
+    } catch (error) {
+        const latencyMs = Date.now() - startTime;
+        
+        // Log error
+        console.error(JSON.stringify({
+            timestamp: new Date().toISOString(),
+            level: 'ERROR',
+            component: '{{EXTENSION_ID}}',
+            message: 'Request processing failed',
+            trace_id: traceId,
+            tenant_id: tenantId,
+            error: error.message,
+            latency_ms: latencyMs
+        }));
+        
+        throw error;
+    }
+}
+
+/**
+ * Main function
+ */
+async function main() {
+    console.log(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: 'INFO',
+        component: '{{EXTENSION_ID}}',
+        message: 'Starting extension',
+        subject: SUBJECT,
+        nats_url: NATS_URL,
+        timeout_ms: TIMEOUT_MS
+    }));
+    
+    try {
+        const nc = await connect({ servers: NATS_URL });
+        console.log(JSON.stringify({
+            timestamp: new Date().toISOString(),
+            level: 'INFO',
+            component: '{{EXTENSION_ID}}',
+            message: 'Connected to NATS',
+            subject: SUBJECT
+        }));
+        
+        const sub = nc.subscribe(SUBJECT);
+        
+        (async () => {
+            for await (const msg of sub) {
+                const requestStartTime = Date.now();
+                
+                try {
+                    // Decode request
+                    const requestJson = sc.decode(msg.data);
+                    const request = JSON.parse(requestJson);
+                    
+                    // Process request with timeout
+                    const timeoutPromise = new Promise((_, reject) => {
+                        setTimeout(() => reject(new Error('Request timeout')), TIMEOUT_MS);
+                    });
+                    
+                    const response = await Promise.race([
+                        processRequest(request),
+                        timeoutPromise
+                    ]);
+                    
+                    const responseJson = JSON.stringify(response);
+                    const latencyMs = Date.now() - requestStartTime;
+                    
+                    // Log response
+                    console.log(JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        level: 'INFO',
+                        component: '{{EXTENSION_ID}}',
+                        message: 'Sending response',
+                        trace_id: request.trace_id,
+                        tenant_id: request.tenant_id,
+                        latency_ms: latencyMs,
+                        response_size: responseJson.length
+                    }));
+                    
+                    // Reply to request
+                    if (msg.reply) {
+                        msg.respond(sc.encode(responseJson));
+                    }
+                    
+                } catch (error) {
+                    const latencyMs = Date.now() - requestStartTime;
+                    
+                    // Log error
+                    console.error(JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        level: 'ERROR',
+                        component: '{{EXTENSION_ID}}',
+                        message: 'Error processing request',
+                        error: error.message,
+                        latency_ms: latencyMs
+                    }));
+                    
+                    // Send error response
+                    if (msg.reply) {
+                        const errorResponse = {
+                            {{ERROR_RESPONSE_FORMAT}}
+                        };
+                        msg.respond(sc.encode(JSON.stringify(errorResponse)));
+                    }
+                }
+            }
+        })().catch(err => {
+            console.error(JSON.stringify({
+                timestamp: new Date().toISOString(),
+                level: 'ERROR',
+                component: '{{EXTENSION_ID}}',
+                message: 'Subscription error',
+                error: err.message
+            }));
+        });
+        
+        console.log(JSON.stringify({
+            timestamp: new Date().toISOString(),
+            level: 'INFO',
+            component: '{{EXTENSION_ID}}',
+            message: 'Listening for requests',
+            subject: SUBJECT
+        }));
+        
+        // Graceful shutdown
+        const shutdown = async (signal) => {
+            console.log(JSON.stringify({
+                timestamp: new Date().toISOString(),
+                level: 'INFO',
+                component: '{{EXTENSION_ID}}',
+                message: 'Shutting down',
+                signal: signal
+            }));
+            await nc.close();
+            process.exit(0);
+        };
+        
+        process.on('SIGINT', () => shutdown('SIGINT'));
+        process.on('SIGTERM', () => shutdown('SIGTERM'));
+        
+    } catch (error) {
+        console.error(JSON.stringify({
+            timestamp: new Date().toISOString(),
+            level: 'ERROR',
+            component: '{{EXTENSION_ID}}',
+            message: 'Failed to connect to NATS',
+            error: error.message,
+            nats_url: NATS_URL
+        }));
+        process.exit(1);
+    }
+}
+
+main();
+

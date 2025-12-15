@@ -1,0 +1,28 @@
+{
+  "name": "beamline-extension-{{EXTENSION_ID}}",
+  "version": "1.0.0",
+  "description": "Beamline Extension: {{EXTENSION_ID}} ({{EXTENSION_TYPE}})",
+  "main": "src/{{EXTENSION_ID}}.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/{{EXTENSION_ID}}.js",
+    "test": "node test/{{EXTENSION_ID}}.test.js",
+    "test:e2e": "node test/{{EXTENSION_ID}}.e2e.js",
+    "lint": "echo 'Linting not configured'"
+  },
+  "keywords": [
+    "beamline",
+    "extension",
+    "nats",
+    "{{EXTENSION_TYPE}}"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "nats": "^2.20.0"
+  },
+  "devDependencies": {
+    "nats": "^2.20.0"
+  }
+}
+

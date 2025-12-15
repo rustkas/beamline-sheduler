@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# Pre-commit hook for DevState verification
+# Verifies .trae/state.json and .trae/history.json before commit
+# Fast path: skips if no DevState files are staged
+
+set -euo pipefail
+
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$PROJECT_ROOT"
+
+# Verbose mode and OS-specific hints
+VERBOSE="${VERBOSE:-false}"
+OS="$(uname -s 2>/dev/null || echo unknown)"
+case "$OS" in
+  Darwin)
+    OS_NAME="macOS"
+    PKG_HINT="brew install jq && pip3 install jsonschema"
+    ;;
+  Linux)
+    OS_NAME="Linux"
+    PKG_HINT="sudo apt-get update && sudo apt-get install -y jq && pip install jsonschema"
+    ;;
+  *)
+    OS_NAME="$OS"
+    PKG_HINT="Install jq and jsonschema via your package manager"
+    ;;
+esac
+# Check for secret leaks in staged files
+if [ -f "scripts/check_secret_leaks.sh" ]; then
+  bash scripts/check_secret_leaks.sh --staged || exit 1
+fi
+
+# Repository checks: skip if not a git repo, no commits, or no origin
+if ! git rev-parse --git-dir >/dev/null 2>&1 || ! git rev-parse --verify HEAD >/dev/null 2>&1 || ! git remote get-url origin >/dev/null 2>&1; then
+  exit 0
+fi
+
+# Fast path: check if DevState files are staged
+STAGED_DEVSTATE_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^\.trae/(state|history)\.json$' || true)
+
+if [ -z "$STAGED_DEVSTATE_FILES" ]; then
+  exit 0
+fi
+
+# DevState files are staged, run verification
+echo "[DevState] Pre-commit: Verifying DevState files..."
+if [ "$VERBOSE" = "true" ]; then
+  echo "[INFO] OS=$OS_NAME"
+  echo "[INFO] Staged DevState files:" && echo "$STAGED_DEVSTATE_FILES" | sed 's/^/  - /'
+fi
+
+# Check if DevState service is running (optional, don't block if not running)
+DEVSTATE_URL="${DEVSTATE_URL:-http://localhost:3180}"
+DEVSTATE_FALLBACK_URL="${DEVSTATE_FALLBACK_URL:-http://localhost:3080}"
+
+DEVSTATE_AVAILABLE=false
+if curl -fsS --connect-timeout 2 --max-time 3 "${DEVSTATE_URL}/health" >/dev/null 2>&1 || curl -fsS --connect-timeout 2 --max-time 3 "${DEVSTATE_FALLBACK_URL}/health" >/dev/null 2>&1; then
+  DEVSTATE_AVAILABLE=true
+  echo "[INFO] DevState service is running"
+else
+  echo "[WARN] DevState service not running (will use local validation only)"
+  echo "[HINT] Start DevState with: make devstate-up"
+  if [ "$VERBOSE" = "true" ]; then
+    echo "[HINT] $OS_NAME setup: $PKG_HINT"
+  fi
+fi
+
+# Run DevState verification (local validation + API if available)
+if [ -f "devstate-tools/devstate/scripts/devstate_verify.sh" ]; then
+  # Set SKIP_LOCAL_VALIDATION=false to ensure local validation runs
+  export SKIP_LOCAL_VALIDATION="${SKIP_LOCAL_VALIDATION:-false}"
+  
+  if bash devstate-tools/devstate/scripts/devstate_verify.sh; then
+    echo "[OK] DevState verification passed"
+    exit 0
+  else
+    echo "[FAIL] DevState verification failed - commit blocked" >&2
+    echo "[HINT] Fix DevState issues before committing" >&2
+    echo "[HINT] If missing local tools, install: pip install jsonschema" >&2
+    echo "[HINT] Temporary bypass (not recommended): export SKIP_DEVSTATE_GATES=true" >&2
+    if [ "$VERBOSE" = "true" ]; then
+      echo "[INFO] Env DEVSTATE_URL=${DEVSTATE_URL:-unset} SKIP_LOCAL_VALIDATION=${SKIP_LOCAL_VALIDATION:-false}"
+    fi
+    exit 1
+  fi
+else
+  echo "[WARN] devstate-tools/devstate/scripts/devstate_verify.sh not found"
+  echo "[WARN] Falling back to basic validation..."
+  
+  # Fallback: basic JSON validation
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -m json.tool .trae/state.json >/dev/null 2>&1 || {
+      echo "[FAIL] .trae/state.json is not valid JSON" >&2
+      exit 1
+    }
+    python3 -m json.tool .trae/history.json >/dev/null 2>&1 || {
+      echo "[FAIL] .trae/history.json is not valid JSON" >&2
+      exit 1
+    }
+    echo "[OK] Basic JSON validation passed"
+    exit 0
+  else
+    echo "[FAIL] Cannot validate DevState files (devstate_verify.sh not found, python3 not available)" >&2
+    exit 1
+  fi
+fi

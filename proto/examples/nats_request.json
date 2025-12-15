@@ -1,0 +1,20 @@
+{
+  "message": {
+    "message_id": "msg_1234567890",
+    "tenant_id": "tenant_abc123",
+    "trace_id": "trace_abc123",
+    "message_type": "chat",
+    "payload": "{\"text\": \"Hello, world!\"}",
+    "metadata": {
+      "source": "gateway",
+      "version": "1.0"
+    },
+    "timestamp_ms": 1704067200000
+  },
+  "policy_id": "default",
+  "context": {
+    "user_id": "user_123",
+    "session_id": "session_456"
+  }
+}
+

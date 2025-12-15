@@ -1,0 +1,179 @@
+# Tracing Spans Catalog
+# Version: 1.0
+# Last Updated: 2025-01-27
+# Author: Agent 10 - Observability/Telemetry
+
+# Source: docs/OBSERVABILITY.md
+
+spans:
+  # Router Spans
+  router:
+    - name: beamline.router.decide
+      description: "Main routing decision"
+      component: router
+      language: erlang
+      module: router_core
+      function: route/3
+      attributes:
+        - name: tenant_id
+          type: string
+        - name: policy_id
+          type: string
+        - name: provider_id
+          type: string
+        - name: decision_reason
+          type: string
+      sampling:
+        errors: 100
+        success: 10
+      parent: null
+      
+    - name: beamline.router.policy.load
+      description: "Policy loading from cache or database"
+      component: router
+      language: erlang
+      module: router_policy
+      function: load_policy/2
+      attributes:
+        - name: tenant_id
+          type: string
+        - name: policy_id
+          type: string
+        - name: policy_version
+          type: string
+        - name: source
+          type: string
+          values: [cache, database]
+      sampling:
+        errors: 100
+        success: 10
+      parent: beamline.router.decide
+      
+    - name: beamline.router.decision
+      description: "Decision algorithm execution"
+      component: router
+      language: erlang
+      module: router_decider
+      function: decide/3
+      attributes:
+        - name: tenant_id
+          type: string
+        - name: decision_type
+          type: string
+          values: [sticky, weighted, fallback]
+      sampling:
+        errors: 100
+        success: 10
+      parent: beamline.router.decide
+      
+    - name: beamline.router.provider.select
+      description: "Provider selection"
+      component: router
+      language: erlang
+      module: router_decider
+      function: decide/3
+      attributes:
+        - name: tenant_id
+          type: string
+        - name: provider_id
+          type: string
+        - name: reason
+          type: string
+      sampling:
+        errors: 100
+        success: 10
+      parent: beamline.router.decision
+
+  # Provider Spans
+  provider:
+    - name: beamline.provider.invoke
+      description: "Provider invocation"
+      component: provider
+      language: erlang
+      module: provider_core
+      function: invoke/2
+      attributes:
+        - name: provider_id
+          type: string
+        - name: model
+          type: string
+        - name: tenant_id
+          type: string
+      sampling:
+        errors: 100
+        success: 10
+      parent: null
+      
+    - name: beamline.provider.stream
+      description: "Provider streaming invocation"
+      component: provider
+      language: erlang
+      module: provider_core
+      function: invoke_stream/2
+      attributes:
+        - name: provider_id
+          type: string
+        - name: model
+          type: string
+        - name: tenant_id
+          type: string
+      sampling:
+        errors: 100
+        success: 10
+      parent: null
+
+  # Ingress Spans
+  ingress:
+    - name: beamline.ingress.message
+      description: "Ingress message processing"
+      component: ingress
+      language: cpp
+      module: ingress_actor
+      function: handle_message
+      attributes:
+        - name: tenant_id
+          type: string
+        - name: message_id
+          type: string
+        - name: message_size
+          type: int64
+      sampling:
+        errors: 100
+        success: 10
+      parent: null
+
+# Context Propagation
+context_propagation:
+  grpc:
+    headers:
+      - trace_id
+      - span_id
+      - X-Trace-Id
+      - X-Span-Id
+    metadata_keys:
+      - trace_id
+      - span_id
+      
+  nats:
+    headers:
+      - trace_id
+      - span_id
+      - X-Trace-Id
+      - X-Span-Id
+      
+  http:
+    headers:
+      - X-Trace-Id
+      - X-Span-Id
+      - trace_id
+      - span_id
+
+# Trace ID Generation
+trace_id:
+  generator: ingress
+  format: hex
+  length: 128
+  components:
+    - ingress
+    - gateway
+

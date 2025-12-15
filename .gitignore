@@ -1,0 +1,92 @@
+# ================================
+# Secrets / local env
+# ================================
+.env
+**/.env
+*.local
+*.local.*
+config/env
+config/env/
+
+
+# ================================
+# Build artifacts (polyglot)
+# ================================
+.env
+**/.env
+_build
+**/build/
+**/dist/
+**/out/
+**/bin/
+**/target/
+**/_build/
+**/deps/
+**/cover/
+**/.coverage/
+**/coverage/
+**/*.gcda
+**/*.gcno
+**/*.profraw
+**/*.profdata
+**/erl_crash.dump
+**/rebar3.crashdump
+erl_crash.dump
+rebar3.crashdump
+
+# ================================
+# Node / JS
+# ================================
+**/node_modules/
+**/.npm/
+**/.pnpm-store/
+**/.yarn/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# ================================
+# Python
+# ================================
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.venv/
+**/venv/
+
+# ================================
+# IDE / OS
+# ================================
+.vscode/
+.idea/
+.DS_Store
+_github
+.ai
+.codeiumignore
+.cursor
+.cursorignore
+.windsurf
+.windsurfignore
+.trae
+worker
+sripts/windsurf_hooks/
+mcp-inventory.json
+docs
+
+
+# ================================
+# Git submodules (keep dirs, ignore accidental nested git metadata)
+# ================================
+**/.git
+
+# Local devstate tools (excluded from umbrella)
+devstate-tools/
+
+# Generated reports and logs
+reports/
+
+fixtures/leak_samples
+
+infra/k8s/beamline-secrets.yaml

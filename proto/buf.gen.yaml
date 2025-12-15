@@ -1,0 +1,15 @@
+version: v2
+plugins:
+  - name: erlang
+    out: apps/otp/router/src/proto
+    opt:
+      - erlang_opt=gen_descriptors
+  - name: typescript
+    out: apps/gateway/src/proto
+    opt:
+      - import_style=commonjs
+      - esModuleInterop=true
+      - outputType=grpc-js
+      - outputClientImpl=grpc-js
+# Source proto files are in root proto/ directory
+# Generated files are placed in respective component directories

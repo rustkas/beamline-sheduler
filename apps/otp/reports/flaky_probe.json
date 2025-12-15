@@ -1,0 +1,12 @@
+{
+  "generated_at": "2025-12-15T00:29:47Z",
+  "nightly": false,
+  "iterations": 3,
+  "suites": [
+    {"suite":"test/router_nats_publish_metrics_SUITE.erl","iterations":3,"status":"failed","failure_iteration":null}
+  ],
+  "summary": {
+    "suite_count": 1,
+    "failures": 1
+  }
+}

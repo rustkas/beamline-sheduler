@@ -1,0 +1,22 @@
+{
+  "name": "rate-limiting-load-test",
+  "version": "1.0.0",
+  "description": "Load tests for Router and Gateway rate limiting",
+  "main": "rate-limiting-load-test.ts",
+  "scripts": {
+    "test": "ts-node rate-limiting-load-test.ts",
+    "test:scenario1": "ts-node rate-limiting-load-test.ts scenario1",
+    "test:scenario2": "ts-node rate-limiting-load-test.ts scenario2",
+    "test:scenario3": "ts-node rate-limiting-load-test.ts scenario3",
+    "test:all": "ts-node rate-limiting-load-test.ts all"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}
+

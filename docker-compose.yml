@@ -1,0 +1,165 @@
+# Compose version key removed; modern Compose ignores it
+
+# Beamline Constructor - Local Development Stack
+# Services: NATS, C-Gateway, Router, UI-Web, DevState, PostgreSQL
+
+networks:
+  beamline_net:
+    driver: bridge
+
+services:
+  # NATS Message Broker
+  nats:
+    image: nats:2.10-alpine
+    container_name: platform-nats
+    command:
+      - "-js"
+      - "-m"
+      - "8222"
+      - "-p"
+      - "4222"
+      - "-D"
+    ports:
+      - "${NATS_PORT:-4222}:4222"
+      - "${NATS_MONITOR_PORT:-8222}:8222"
+    networks:
+      - beamline_net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  # UI-Web (Phoenix LiveView)
+  ui-web:
+    build:
+      context: ./apps/ui_web
+      dockerfile: Dockerfile
+    container_name: platform-ui-web
+    ports:
+      - "${UI_WEB_PORT:-4000}:4000"
+    environment:
+      - GATEWAY_URL=http://c-gateway:8080
+      - NATS_URL=nats://nats:4222
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE:-your_secret_key_base_here}
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/beamline_dev
+      - USE_MOCK_GATEWAY=false
+      - ENABLE_REAL_TIME=true
+      - NATS_ENABLED=true
+    depends_on:
+      - c-gateway
+      - nats
+    networks:
+      - beamline_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/_health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # C-Gateway (C HTTP Gateway, HTTP -> NATS -> Router)
+  c-gateway:
+    build:
+      context: ./apps/c-gateway
+    container_name: platform-c-gateway
+    environment:
+      - GATEWAY_PORT=${C_GATEWAY_PORT:-8080}
+      - NATS_URL=${NATS_URL:-nats://nats:4222}
+    networks:
+      - beamline_net
+    depends_on:
+      nats:
+        condition: service_healthy
+      router:
+        condition: service_healthy
+    ports:
+      - "${C_GATEWAY_HOST_PORT:-8081}:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/_health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # NOTE:
+  # The legacy NestJS Gateway service (apps/gateway) was removed from this stack.
+  # C-Gateway is the HTTP entrypoint and talks to Router over NATS.
+
+  # Router (Erlang/OTP gRPC)
+  router:
+    build:
+      context: ./apps/otp/router
+      dockerfile: Dockerfile
+    container_name: platform-router
+    environment:
+      - NATS_URL=${NATS_URL:-nats://nats:4222}
+      - ROUTER_GRPC_PORT=${ROUTER_GRPC_PORT:-9000}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_USER=${DB_USER:-beamline}
+      - DB_PASSWORD=${DB_PASSWORD:-dev_password}
+      - DB_NAME=${DB_NAME:-beamline}
+    ports:
+      - "${ROUTER_GRPC_PORT:-9000}:9000"
+    networks:
+      - beamline_net
+    depends_on:
+      nats:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # DevState HTTP Service (MCP Wrapper)
+  devstate:
+    build:
+      context: .
+      dockerfile: infra/docker/devstate/Dockerfile
+    container_name: trae-devstate
+    environment:
+      - DEVSTATE_HTTP_PORT=${DEVSTATE_HTTP_PORT:-3080}
+      - HMAC_SECRET=${HMAC_SECRET:-dev-secret-not-for-prod}
+      # Force DB host to the postgres service to avoid host env override
+      - DATABASE_URL=postgresql://beamline:dev_password@postgres:5432/beamline
+      - PGHOST=postgres
+      - DB_SCHEMA=${DB_SCHEMA:-public}
+    ports:
+      - "${DEVSTATE_HTTP_PORT:-3080}:3080"
+    networks:
+      - beamline_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  # PostgreSQL for DevState
+  postgres:
+    image: postgres:16-alpine
+    container_name: devstate-postgres
+    environment:
+      - POSTGRES_USER=${DB_USER:-beamline}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-dev_password}
+      - POSTGRES_DB=${DB_NAME:-beamline}
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - beamline_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-beamline} -d ${DB_NAME:-beamline}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped

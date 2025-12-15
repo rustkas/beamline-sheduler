@@ -1,0 +1,12 @@
+{
+  "provider_id": "openai",
+  "reason": "weighted",
+  "priority": 50,
+  "expected_latency_ms": 250,
+  "expected_cost": 0.001,
+  "metadata": {
+    "algorithm": "weighted_round_robin",
+    "weights": "{\"openai\": 0.7, \"anthropic\": 0.3}"
+  }
+}
+

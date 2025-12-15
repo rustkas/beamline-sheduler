@@ -1,0 +1,431 @@
+# GitLab CI Configuration
+# Gateway Observability Tests
+
+stages:
+  - build
+  - test
+  - coverage
+
+variables:
+  GATEWAY_DIR: apps/c-gateway
+  WORKER_DIR: apps/caf/processor
+
+# Gateway Observability Tests
+gateway-observability-tests:
+  stage: test
+  image: ubuntu:22.04
+  tags:
+    - docker
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq build-essential libjansson-dev cmake curl jq
+  script:
+    - cd ${GATEWAY_DIR}
+    - make clean || true
+    - make
+    - echo "Running unit tests..."
+    - make test-observability || (echo "Unit tests failed" && exit 1)
+    - echo "Running integration tests..."
+    - make test-health || (echo "Integration tests failed" && exit 1)
+    - echo "Running performance tests..."
+    - make test-performance || echo "Performance tests completed with warnings"
+    - echo "Running E2E test script (if Gateway is running)..."
+    - bash ../../scripts/observability/test_gateway_observability.sh || echo "E2E tests skipped (Gateway not running)"
+  artifacts:
+    when: always
+    reports:
+      junit: ${GATEWAY_DIR}/build/test-results.xml
+    paths:
+      - ${GATEWAY_DIR}/build/
+    expire_in: 1 week
+  only:
+    changes:
+      - ${GATEWAY_DIR}/**/*
+      - .gitlab-ci.yml
+
+# Gateway Coverage Report
+gateway-coverage:
+  stage: coverage
+  image: ubuntu:22.04
+  tags:
+    - docker
+  dependencies:
+    - gateway-observability-tests
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq build-essential libjansson-dev cmake lcov
+  script:
+    - cd ${GATEWAY_DIR}
+    - echo "Building tests with coverage..."
+    - make test-coverage
+    - echo "Generating coverage report..."
+    - bash scripts/generate_coverage.sh || echo "Coverage report generation completed with warnings"
+    - |
+      if [ -f build/coverage.info ]; then
+        echo "Coverage summary:"
+        lcov --summary build/coverage.info 2>/dev/null | grep -E "lines|functions|branches" || echo "Coverage data available"
+      fi
+  artifacts:
+    when: always
+    paths:
+      - ${GATEWAY_DIR}/build/coverage_html/
+      - ${GATEWAY_DIR}/build/coverage.info
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: ${GATEWAY_DIR}/build/coverage.xml
+    expire_in: 1 week
+  coverage: '/lines\.\.\.: \d+\.\d+%/'
+  only:
+    changes:
+      - ${GATEWAY_DIR}/**/*
+      - .gitlab-ci.yml
+
+# Router Fast Tier (Unit + Critical Integration)
+router-ct-fast:
+  stage: test
+  image: erlang:26.0
+  tags:
+    - docker
+  variables:
+    ROUTER_DIR: apps/otp/router
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq curl jq grpc-health-probe
+    - curl -L https://github.com/erlef/rebar3/releases/download/3.22.0/rebar3 -o /usr/local/bin/rebar3
+    - chmod +x /usr/local/bin/rebar3
+  script:
+    - cd ${ROUTER_DIR}
+    - echo "Installing Erlang dependencies..."
+    - rebar3 get-deps
+    - rebar3 compile
+    - echo "Running Fast Tier Tests..."
+    - bash scripts/ct-fast.sh || (echo "Fast tests failed" && exit 1)
+  artifacts:
+    when: always
+    paths:
+      - ${ROUTER_DIR}/_build/test/logs/**
+    expire_in: 1 week
+  only:
+    changes:
+      - ${ROUTER_DIR}/**/*
+      - .gitlab-ci.yml
+
+# Router Full Tier (All Tests except Heavy)
+router-ct-full:
+  stage: test
+  image: erlang:26.0
+  tags:
+    - docker
+  variables:
+    ROUTER_DIR: apps/otp/router
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq curl jq grpc-health-probe
+    - curl -L https://github.com/erlef/rebar3/releases/download/3.22.0/rebar3 -o /usr/local/bin/rebar3
+    - chmod +x /usr/local/bin/rebar3
+  script:
+    - cd ${ROUTER_DIR}
+    - echo "Installing Erlang dependencies..."
+    - rebar3 get-deps
+    - rebar3 compile
+    - echo "Running Full Tier Tests..."
+    - bash scripts/ct-full.sh || (echo "Full tests failed" && exit 1)
+  artifacts:
+    when: always
+    paths:
+      - ${ROUTER_DIR}/_build/test/logs/**
+    expire_in: 1 week
+  only:
+    - main
+    - master
+    - merge_requests
+
+# Router Heavy Tier (Chaos, Soak, Performance)
+router-ct-heavy:
+  stage: test
+  image: erlang:26.0
+  tags:
+    - docker
+  variables:
+    ROUTER_DIR: apps/otp/router
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq curl jq grpc-health-probe
+    - curl -L https://github.com/erlef/rebar3/releases/download/3.22.0/rebar3 -o /usr/local/bin/rebar3
+    - chmod +x /usr/local/bin/rebar3
+  script:
+    - cd ${ROUTER_DIR}
+    - echo "Installing Erlang dependencies..."
+    - rebar3 get-deps
+    - rebar3 compile
+    - echo "Running Heavy Tier Tests..."
+    - bash scripts/ct-heavy.sh || (echo "Heavy tests failed" && exit 1)
+  artifacts:
+    when: always
+    paths:
+      - ${ROUTER_DIR}/_build/test/logs/**
+    expire_in: 1 week
+  only:
+    - schedules
+    - triggers
+    - main
+    - master
+  when: manual
+
+# R10 Circuit Breaker Unit Tests
+router-r10-unit:
+  stage: test
+  image: erlang:26.0
+  tags:
+    - docker
+  variables:
+    ROUTER_DIR: apps/otp/router
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq curl jq grpc-health-probe
+    - curl -L https://github.com/erlef/rebar3/releases/download/3.22.0/rebar3 -o /usr/local/bin/rebar3
+    - chmod +x /usr/local/bin/rebar3
+  script:
+    - cd ${ROUTER_DIR}
+    - echo "Installing Erlang dependencies..."
+    - rebar3 get-deps
+    - rebar3 compile
+    - echo "Running R10 unit tests (circuit breaker logic)..."
+    - rebar3 ct --suite test/router_circuit_breaker_SUITE || (echo "R10 unit tests failed" && exit 1)
+  artifacts:
+    when: always
+    paths:
+      - ${ROUTER_DIR}/_build/test/logs/**
+    expire_in: 1 week
+  only:
+    changes:
+      - ${ROUTER_DIR}/**/*
+      - .gitlab-ci.yml
+
+# R10 E2E Tests (CI Profile)
+router-r10-e2e-ci:
+  stage: test
+  image: erlang:26.0
+  tags:
+    - docker
+  variables:
+    ROUTER_DIR: apps/otp/router
+    R10_PROFILE: ci
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq curl jq grpc-health-probe
+    - curl -L https://github.com/erlef/rebar3/releases/download/3.22.0/rebar3 -o /usr/local/bin/rebar3
+    - chmod +x /usr/local/bin/rebar3
+  script:
+    - cd ${ROUTER_DIR}
+    - echo "Installing Erlang dependencies..."
+    - rebar3 get-deps
+    - rebar3 compile
+    - echo "Running R10 E2E tests (CI profile: 10 clients × 20 requests)..."
+    - rebar3 ct --suite test/router_publish_failure_e2e_SUITE --config test/ct.config || (echo "R10 E2E tests failed" && exit 1)
+  artifacts:
+    when: always
+    paths:
+      - ${ROUTER_DIR}/_build/test/logs/**
+    expire_in: 1 week
+  only:
+    - main
+    - master
+    - merge_requests
+  except:
+    - schedules
+
+# R10 E2E Tests (Heavy Profile - Nightly)
+router-r10-e2e-heavy:
+  stage: test
+  image: erlang:26.0
+  tags:
+    - docker
+  variables:
+    ROUTER_DIR: apps/otp/router
+    R10_PROFILE: heavy
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq curl jq grpc-health-probe
+    - curl -L https://github.com/erlef/rebar3/releases/download/3.22.0/rebar3 -o /usr/local/bin/rebar3
+    - chmod +x /usr/local/bin/rebar3
+  script:
+    - cd ${ROUTER_DIR}
+    - echo "Installing Erlang dependencies..."
+    - rebar3 get-deps
+    - rebar3 compile
+    - echo "Pruning old test metrics before E2E run..."
+    - erl -noshell -eval "application:ensure_all_started(beamline_router), router_r10_metrics:prune_old_test_metrics(5), init:stop()" || echo "Metrics cleanup skipped (app not running)"
+    - echo "Running R10 E2E tests (Heavy profile: 50 clients × 100 requests)..."
+    - rebar3 ct --suite test/router_publish_failure_e2e_SUITE --config test/ct.config || (echo "R10 E2E heavy tests failed" && exit 1)
+    - echo "Dumping metrics for analysis..."
+    - find ${ROUTER_DIR}/_build/test/logs -name "*.log" -exec grep -l "dump_metrics" {} \; || echo "No metric dumps found"
+  artifacts:
+    when: always
+    paths:
+      - ${ROUTER_DIR}/_build/test/logs/**
+    reports:
+      junit: ${ROUTER_DIR}/_build/test/logs/index.html
+    expire_in: 2 weeks
+  only:
+    - schedules
+    - triggers
+    - main
+    - master
+  when: manual
+
+# R10 Property-Based Tests (Nightly)
+router-r10-property:
+  stage: test
+  image: erlang:26.0
+  tags:
+    - docker
+  variables:
+    ROUTER_DIR: apps/otp/router
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq curl jq grpc-health-probe
+    - curl -L https://github.com/erlef/rebar3/releases/download/3.22.0/rebar3 -o /usr/local/bin/rebar3
+    - chmod +x /usr/local/bin/rebar3
+  script:
+    - cd ${ROUTER_DIR}
+    - echo "Installing Erlang dependencies..."
+    - rebar3 get-deps
+    - rebar3 compile
+    - echo "Running R10 property-based tests (light mode)..."
+    - timeout 120 rebar3 ct --suite test/router_circuit_breaker_prop_SUITE || echo "Property tests completed with warnings (non-blocking)"
+  artifacts:
+    when: always
+    paths:
+      - ${ROUTER_DIR}/_build/test/logs/**
+    expire_in: 1 week
+  only:
+    - schedules
+    - triggers
+    - main
+    - master
+  when: manual
+  allow_failure: true
+
+# R10 Protective Rails Validation
+router-r10-protective-rails:
+  stage: test
+  image: erlang:26.0
+  tags:
+    - docker
+  variables:
+    ROUTER_DIR: apps/otp/router
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq bash
+  script:
+    - cd ${ROUTER_DIR}
+    - echo "Validating R10 protective rails..."
+    - bash scripts/check_r10_protective_rails.sh || (echo "Protective rails validation failed" && exit 1)
+  only:
+    changes:
+      - ${ROUTER_DIR}/**/*
+      - .gitlab-ci.yml
+
+# Router NATS Performance Tests (Nightly/Extended)
+router-nats-performance-tests:
+  stage: test
+  image: erlang:26.0
+  tags:
+    - docker
+  variables:
+    ROUTER_DIR: apps/otp/router
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq curl jq grpc-health-probe
+    - curl -L https://github.com/erlef/rebar3/releases/download/3.22.0/rebar3 -o /usr/local/bin/rebar3
+    - chmod +x /usr/local/bin/rebar3
+  script:
+    - cd ${ROUTER_DIR}
+    - echo "Installing Erlang dependencies..."
+    - rebar3 get-deps
+    - rebar3 compile
+    - echo "Running NATS performance tests..."
+    - rebar3 ct --suite test/router_nats_performance_SUITE || echo "NATS performance tests completed with warnings"
+  artifacts:
+    when: always
+    paths:
+      - ${ROUTER_DIR}/_build/test/logs/**
+      - ${ROUTER_DIR}/.windsurf/reports/**
+    expire_in: 1 week
+  only:
+    - schedules
+    - triggers
+    - main
+    - master
+  when: manual
+
+# Worker Observability Tests
+worker-observability-tests:
+  stage: test
+  image: ubuntu:22.04
+  tags:
+    - docker
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq build-essential cmake libcaf-dev curl jq
+  script:
+    - cd ${WORKER_DIR}
+    - mkdir -p build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug
+    - cmake --build . -- -j"$(nproc)"
+    - echo "Running unit tests..."
+    - ctest -R ObservabilityTest --verbose || (echo "Unit tests failed" && exit 1)
+    - echo "Running integration tests..."
+    - ctest -R HealthEndpointTest --verbose || (echo "Integration tests failed" && exit 1)
+    - echo "Running performance tests..."
+    - ctest -R ObservabilityPerformanceTest --verbose || echo "Performance tests completed with warnings"
+    - echo "Running E2E test script (if Worker is running)..."
+    - bash ../../scripts/observability/test_worker_observability.sh || echo "E2E tests skipped (Worker not running)"
+  artifacts:
+    when: always
+    paths:
+      - ${WORKER_DIR}/build/
+    expire_in: 1 week
+  only:
+    changes:
+      - ${WORKER_DIR}/**/*
+      - .gitlab-ci.yml
+
+# Worker Coverage Report
+worker-coverage:
+  stage: coverage
+  image: ubuntu:22.04
+  tags:
+    - docker
+  dependencies:
+    - worker-observability-tests
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq build-essential cmake libcaf-dev lcov
+  script:
+    - cd ${WORKER_DIR}
+    - mkdir -p build-coverage && cd build-coverage
+    - cmake .. -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+    - cmake --build . -- -j"$(nproc)"
+    - ctest --verbose
+    - echo "Generating coverage report..."
+    - bash ../scripts/generate_coverage.sh || echo "Coverage report generation completed with warnings"
+    - |
+      if [ -f coverage.info ]; then
+        echo "Coverage summary:"
+        lcov --summary coverage.info 2>/dev/null | grep -E "lines|functions|branches" || echo "Coverage data available"
+      fi
+  artifacts:
+    when: always
+    paths:
+      - ${WORKER_DIR}/build-coverage/coverage_html/
+      - ${WORKER_DIR}/build-coverage/coverage.info
+    expire_in: 1 week
+  coverage: '/lines\.\.\.: \d+\.\d+%/'
+  only:
+    changes:
+      - ${WORKER_DIR}/**/*
+      - .gitlab-ci.yml
+

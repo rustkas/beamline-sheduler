@@ -1,0 +1,143 @@
+# {{EXTENSION_NAME}} Extension
+
+**Type**: {{EXTENSION_TYPE}}  
+**Subject**: `{{NATS_SUBJECT}}`  
+**Description**: {{EXTENSION_DESCRIPTION}}
+
+## Overview
+
+This extension implements {{EXTENSION_TYPE}} functionality for Beamline Router.
+
+## Contract
+
+See `docs/EXTENSIONS_API.md` for complete contract specification.
+
+### Request Format
+
+```json
+{
+  "trace_id": "uuid",
+  "tenant_id": "tenant-123",
+  "payload": {
+    "message_id": "m-1",
+    "message_type": "chat",
+    "payload": "message content",
+    "metadata": {}
+  },
+  "metadata": {
+    "lang": "en",
+    "policy_id": "policy-456"
+  }
+}
+```
+
+### Response Format
+
+{{RESPONSE_FORMAT_DESCRIPTION}}
+
+## Installation
+
+```bash
+npm install
+```
+
+## Running
+
+### Local Development
+
+```bash
+# Set NATS URL (default: nats://localhost:4222)
+export NATS_URL=nats://localhost:4222
+
+# Run extension
+npm start
+```
+
+### With Docker
+
+```bash
+docker build -t {{EXTENSION_ID}} .
+docker run -e NATS_URL=nats://host.docker.internal:4222 {{EXTENSION_ID}}
+```
+
+## Testing
+
+### Unit Tests
+
+```bash
+npm test
+```
+
+### E2E Tests
+
+```bash
+# Prerequisites: NATS and Router running
+npm run test:e2e
+```
+
+## Registry Configuration
+
+Add to `apps/otp/router/priv/fixtures/extensions/{{EXTENSION_ID}}.json`:
+
+```json
+{
+  "id": "{{EXTENSION_ID}}",
+  "type": "{{EXTENSION_TYPE}}",
+  "subject": "{{NATS_SUBJECT}}",
+  "timeout_ms": {{TIMEOUT_MS}},
+  "retry": {{RETRY}},
+  "enabled": true
+}
+```
+
+## Development
+
+### Project Structure
+
+```
+.
+├── src/
+│   └── {{EXTENSION_ID}}.js      # Main handler
+├── test/
+│   ├── {{EXTENSION_ID}}.test.js # Unit tests
+│   └── {{EXTENSION_ID}}.e2e.js  # E2E tests
+├── package.json
+└── README.md
+```
+
+### Adding Features
+
+1. Implement logic in `processRequest()` function
+2. Add unit tests
+3. Test locally with `npm start`
+4. Run E2E tests against Router
+5. Submit PR with registry configuration
+
+## Logging
+
+Extension uses structured JSON logging:
+
+```json
+{
+  "timestamp": "2025-01-27T12:00:00Z",
+  "level": "INFO",
+  "component": "{{EXTENSION_ID}}",
+  "message": "Processing request",
+  "trace_id": "uuid",
+  "tenant_id": "tenant-123",
+  "latency_ms": 50
+}
+```
+
+## Error Handling
+
+- **Timeout**: Returns error response if processing exceeds timeout
+- **Invalid Request**: Returns error response with details
+- **Processing Error**: Returns error response with error message
+
+## References
+
+- `docs/EXTENSIONS_API.md` - Extensions API contract
+- `docs/ARCHITECTURE/EXTENSION_ROUTING_STRATEGY.md` - Routing strategy
+- `tools/extensions/` - Reference implementations
+

@@ -1,0 +1,30 @@
+{
+  "project": "beamline-constructor",
+  "version": "1.0",
+  "current_cp": "CP0-LC",
+  "no_drift": true,
+  "agents": [
+    {
+      "id": "AGENT_1_REPO_STATE",
+      "name": "Repo/State Bootstrap",
+      "task": "Specify monorepo and project state",
+      "cp": "CP0-LC",
+      "status": "completed",
+      "started_at": "2025-11-05T09:37:52Z",
+      "updated_at": "2025-11-05T13:31:22Z"
+    }
+  ],
+  "artifact_checksums": [
+    {
+      "path": "README.md",
+      "hash": "4e5115fa44400a10d16cfab9ff5a3a7e30921647342ec95ae230e545c87b809e",
+      "ts": "2025-01-27T12:00:00Z"
+    },
+    {
+      "path": "proto/beamline/flow/v1/flow.proto",
+      "hash": "6628bced13a099c948cc59bc5918f334f8fd850d0158cfe6b5389f563e6a0eda",
+      "ts": "2025-11-05T09:37:52Z"
+    }
+  ],
+  "updated_at": "2025-01-27T12:00:00Z"
+}

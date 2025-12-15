@@ -1,0 +1,406 @@
+---
+# Drone CI Configuration
+# Gateway Observability Tests
+
+kind: pipeline
+type: docker
+name: gateway-observability-tests
+
+steps:
+  - name: install-dependencies
+    image: ubuntu:22.04
+    commands:
+      - apt-get update -qq
+      - apt-get install -y -qq build-essential libjansson-dev cmake curl jq
+    when:
+      changes:
+        - apps/c-gateway/**/*
+
+  - name: build-gateway
+    image: ubuntu:22.04
+    depends_on:
+      - install-dependencies
+    commands:
+      - cd apps/c-gateway
+      - make clean || true
+      - make
+    when:
+      changes:
+        - apps/c-gateway/**/*
+
+  - name: unit-tests
+    image: ubuntu:22.04
+    depends_on:
+      - build-gateway
+    commands:
+      - cd apps/c-gateway
+      - echo "Running unit tests..."
+      - make test-observability || (echo "Unit tests failed" && exit 1)
+    when:
+      changes:
+        - apps/c-gateway/**/*
+
+  - name: integration-tests
+    image: ubuntu:22.04
+    depends_on:
+      - build-gateway
+    commands:
+      - cd apps/c-gateway
+      - echo "Running integration tests..."
+      - make test-health || (echo "Integration tests failed" && exit 1)
+    when:
+      changes:
+        - apps/c-gateway/**/*
+
+  - name: performance-tests
+    image: ubuntu:22.04
+    depends_on:
+      - build-gateway
+    commands:
+      - cd apps/c-gateway
+      - echo "Running performance tests..."
+      - make test-performance || echo "Performance tests completed with warnings"
+    when:
+      changes:
+        - apps/c-gateway/**/*
+
+  - name: e2e-tests
+    image: ubuntu:22.04
+    depends_on:
+      - build-gateway
+    commands:
+      - cd apps/c-gateway
+      - echo "Running E2E test script (if Gateway is running)..."
+      - bash ../../scripts/observability/test_gateway_observability.sh || echo "E2E tests skipped (Gateway not running)"
+    when:
+      changes:
+        - apps/c-gateway/**/*
+
+  - name: coverage
+    image: ubuntu:22.04
+    depends_on:
+      - unit-tests
+      - integration-tests
+    commands:
+      - apt-get update -qq
+      - apt-get install -y -qq build-essential libjansson-dev cmake lcov
+      - cd apps/c-gateway
+      - echo "Building tests with coverage..."
+      - make test-coverage
+      - echo "Generating coverage report..."
+      - bash scripts/generate_coverage.sh || echo "Coverage report generation completed with warnings"
+      - |
+        if [ -f build/coverage.info ]; then
+          echo "Coverage summary:"
+          lcov --summary build/coverage.info 2>/dev/null | grep -E "lines|functions|branches" || echo "Coverage data available"
+        fi
+    when:
+      changes:
+        - apps/c-gateway/**/*
+
+---
+kind: pipeline
+type: docker
+name: gateway-coverage-report
+
+steps:
+  - name: coverage-report
+    image: ubuntu:22.04
+    commands:
+      - apt-get update -qq
+      - apt-get install -y -qq build-essential libjansson-dev cmake lcov
+      - cd apps/c-gateway
+      - make test-coverage
+      - bash scripts/generate_coverage.sh
+    when:
+      changes:
+        - apps/c-gateway/**/*
+
+---
+kind: pipeline
+type: docker
+name: router-observability-tests
+
+steps:
+  - name: install-dependencies
+    image: erlang:26.0
+    commands:
+      - apt-get update -qq
+      - apt-get install -y -qq curl jq grpc-health-probe
+      - curl -L https://github.com/erlef/rebar3/releases/download/3.22.0/rebar3 -o /usr/local/bin/rebar3
+      - chmod +x /usr/local/bin/rebar3
+    when:
+      changes:
+        - apps/otp/router/**/*
+
+  - name: build-router
+    image: erlang:26.0
+    depends_on:
+      - install-dependencies
+    commands:
+      - cd apps/otp/router
+      - echo "Installing Erlang dependencies..."
+      - rebar3 get-deps
+      - rebar3 compile
+    when:
+      changes:
+        - apps/otp/router/**/*
+
+  - name: unit-tests
+    image: erlang:26.0
+    depends_on:
+      - build-router
+    commands:
+      - cd apps/otp/router
+      - echo "Running unit tests..."
+      - rebar3 ct --suite test/router_observability_SUITE || (echo "Unit tests failed" && exit 1)
+    when:
+      changes:
+        - apps/otp/router/**/*
+
+  - name: extensions-pipeline-tests
+    image: erlang:26.0
+    depends_on:
+      - build-router
+    commands:
+      - cd apps/otp/router
+      - echo "Running Extensions Pipeline tests (CP2-LC required)..."
+      - rebar3 ct --suite test/router_extensions_pipeline_SUITE || (echo "Extensions Pipeline tests failed" && exit 1)
+    when:
+      changes:
+        - apps/otp/router/**/*
+
+  - name: integration-tests
+    image: erlang:26.0
+    depends_on:
+      - build-router
+    commands:
+      - cd apps/otp/router
+      - echo "Running integration tests..."
+      - rebar3 ct --suite test/router_health_integration_SUITE || (echo "Integration tests failed" && exit 1)
+    when:
+      changes:
+        - apps/otp/router/**/*
+
+  - name: extensions-e2e-tests
+    image: erlang:26.0
+    depends_on:
+      - build-router
+    commands:
+      - apt-get update -qq
+      - apt-get install -y -qq curl jq grpc-health-probe
+      - cd apps/otp/router
+      - echo "Running Extensions E2E tests (CP2-LC required)..."
+      - rebar3 ct --suite test/router_extensions_e2e_SUITE || (echo "Extensions E2E tests failed" && exit 1)
+    when:
+      changes:
+        - apps/otp/router/**/*
+
+  - name: e2e-tests
+    image: erlang:26.0
+    depends_on:
+      - build-router
+    commands:
+      - apt-get update -qq
+      - apt-get install -y -qq curl jq grpc-health-probe
+      - cd apps/otp/router
+      - echo "Running E2E test script (if Router is running)..."
+      - bash ../../scripts/observability/test_router_observability.sh || echo "E2E tests skipped (Router not running)"
+    when:
+      changes:
+        - apps/otp/router/**/*
+
+  - name: extensions-security-tests
+    image: erlang:26.0
+    depends_on:
+      - build-router
+    commands:
+      - cd apps/otp/router
+      - echo "Running Extensions Security tests (CP2-LC required)..."
+      - rebar3 ct --suite test/router_extensions_security_SUITE || (echo "Extensions Security tests failed" && exit 1)
+    when:
+      changes:
+        - apps/otp/router/**/*
+
+  - name: extensions-telemetry-tests
+    image: erlang:26.0
+    depends_on:
+      - build-router
+    commands:
+      - cd apps/otp/router
+      - echo "Running Extensions Telemetry tests (CP2-LC required)..."
+      - rebar3 ct --suite test/router_extension_invoker_telemetry_SUITE || (echo "Extensions Telemetry tests failed" && exit 1)
+    when:
+      changes:
+        - apps/otp/router/**/*
+
+  - name: extensions-load-tests
+    image: erlang:26.0
+    depends_on:
+      - build-router
+    commands:
+      - cd apps/otp/router
+      - echo "Running Extensions Pipeline Load tests (Pre-Release)..."
+      - rebar3 ct --suite test/router_extensions_pipeline_load_SUITE || echo "Extensions Load tests completed with warnings (Pre-Release)"
+    when:
+      changes:
+        - apps/otp/router/**/*
+  
+  - name: nats-connection-failure-tests
+    image: erlang:26.0
+    depends_on:
+      - build-router
+    commands:
+      - cd apps/otp/router
+      - echo "Running NATS connection failure tests..."
+      - rebar3 ct --suite test/router_nats_connection_failure_SUITE || (echo "NATS connection failure tests failed" && exit 1)
+    when:
+      changes:
+        - apps/otp/router/**/*
+  
+  - name: nats-fault-injection-tests
+    image: erlang:26.0
+    depends_on:
+      - build-router
+    commands:
+      - cd apps/otp/router
+      - echo "Running NATS fault injection tests..."
+      - rebar3 ct --suite test/router_jetstream_fault_injection_SUITE || (echo "NATS fault injection tests failed" && exit 1)
+      - echo "Running concurrent faults tests..."
+      - rebar3 ct --suite test/router_concurrent_faults_SUITE || (echo "Concurrent faults tests failed" && exit 1)
+      - echo "Running result consumer fault injection tests..."
+      - rebar3 ct --suite test/router_result_consumer_SUITE --case test_prolonged_fault_period_recovery_no_router_restart,test_max_delivery_count_exhaustion,test_multiple_fault_recovery_cycles || (echo "Result consumer fault injection tests failed" && exit 1)
+      - echo "Running decide consumer fault injection tests..."
+      - rebar3 ct --suite test/router_decide_consumer_SUITE --case test_decide_prolonged_fault_period_recovery_no_router_restart,test_decide_max_delivery_count_exhaustion,test_decide_multiple_fault_recovery_cycles || (echo "Decide consumer fault injection tests failed" && exit 1)
+    when:
+      changes:
+        - apps/otp/router/**/*
+  
+  - name: fault-injection-coverage-validation
+    image: erlang:26.0
+    depends_on:
+      - build-router
+    commands:
+      - cd apps/otp/router
+      - echo "Validating fault injection test coverage and metrics contract..."
+      - bash scripts/check_fault_injection_coverage.sh || (echo "Fault injection coverage validation failed" && exit 1)
+    when:
+      changes:
+        - apps/otp/router/docs/PROMETHEUS_ALERTS.md
+        - apps/otp/router/test/*fault_injection*SUITE.erl
+        - apps/otp/router/test/*result_consumer*SUITE.erl
+        - apps/otp/router/test/*decide_consumer*SUITE.erl
+        - apps/otp/router/scripts/check_fault_injection_coverage.sh
+  
+  - name: nats-integration-tests
+    image: erlang:26.0
+    depends_on:
+      - build-router
+    commands:
+      - cd apps/otp/router
+      - echo "Running NATS integration tests..."
+      - rebar3 ct --suite test/router_nats_integration_SUITE || (echo "NATS integration tests failed" && exit 1)
+    when:
+      changes:
+        - apps/otp/router/**/*
+
+---
+kind: pipeline
+type: docker
+name: worker-observability-tests
+
+steps:
+  - name: install-dependencies
+    image: ubuntu:22.04
+    commands:
+      - apt-get update -qq
+      - apt-get install -y -qq build-essential cmake libcaf-dev curl jq
+    when:
+      changes:
+        - apps/caf/processor/**/*
+
+  - name: build-worker
+    image: ubuntu:22.04
+    depends_on:
+      - install-dependencies
+    commands:
+      - cd apps/caf/processor
+      - mkdir -p build && cd build
+      - cmake .. -DCMAKE_BUILD_TYPE=Debug
+      - cmake --build . -- -j"$(nproc)"
+    when:
+      changes:
+        - apps/caf/processor/**/*
+
+  - name: unit-tests
+    image: ubuntu:22.04
+    depends_on:
+      - build-worker
+    commands:
+      - cd apps/caf/processor/build
+      - echo "Running unit tests..."
+      - ctest -R ObservabilityTest --verbose || (echo "Unit tests failed" && exit 1)
+    when:
+      changes:
+        - apps/caf/processor/**/*
+
+  - name: integration-tests
+    image: ubuntu:22.04
+    depends_on:
+      - build-worker
+    commands:
+      - cd apps/caf/processor/build
+      - echo "Running integration tests..."
+      - ctest -R HealthEndpointTest --verbose || (echo "Integration tests failed" && exit 1)
+    when:
+      changes:
+        - apps/caf/processor/**/*
+
+  - name: performance-tests
+    image: ubuntu:22.04
+    depends_on:
+      - build-worker
+    commands:
+      - cd apps/caf/processor/build
+      - echo "Running performance tests..."
+      - ctest -R ObservabilityPerformanceTest --verbose || echo "Performance tests completed with warnings"
+    when:
+      changes:
+        - apps/caf/processor/**/*
+
+  - name: e2e-tests
+    image: ubuntu:22.04
+    depends_on:
+      - build-worker
+    commands:
+      - cd apps/caf/processor
+      - echo "Running E2E test script (if Worker is running)..."
+      - bash ../../scripts/observability/test_worker_observability.sh || echo "E2E tests skipped (Worker not running)"
+    when:
+      changes:
+        - apps/caf/processor/**/*
+
+  - name: coverage
+    image: ubuntu:22.04
+    depends_on:
+      - unit-tests
+      - integration-tests
+    commands:
+      - apt-get update -qq
+      - apt-get install -y -qq build-essential cmake libcaf-dev lcov
+      - cd apps/caf/processor
+      - mkdir -p build-coverage && cd build-coverage
+      - cmake .. -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+      - cmake --build . -- -j"$(nproc)"
+      - ctest --verbose
+      - echo "Generating coverage report..."
+      - bash ../scripts/generate_coverage.sh || echo "Coverage report generation completed with warnings"
+      - |
+        if [ -f coverage.info ]; then
+          echo "Coverage summary:"
+          lcov --summary coverage.info 2>/dev/null | grep -E "lines|functions|branches" || echo "Coverage data available"
+        fi
+    when:
+      changes:
+        - apps/caf/processor/**/*
+

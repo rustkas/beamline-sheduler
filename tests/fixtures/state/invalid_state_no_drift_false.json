@@ -1,0 +1,10 @@
+{
+  "project": "beamline-constructor",
+  "version": "1.0",
+  "current_cp": "CP0-LC",
+  "no_drift": false,
+  "agents": [],
+  "artifact_checksums": [],
+  "updated_at": "2025-01-27T12:00:00Z"
+}
+

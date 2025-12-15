@@ -1,0 +1,15 @@
+{
+  "id": "{{EXTENSION_ID}}",
+  "type": "{{EXTENSION_TYPE}}",
+  "subject": "{{NATS_SUBJECT}}",
+  "timeout_ms": {{TIMEOUT_MS}},
+  "retry": {{RETRY}},
+  "enabled": true,
+  "config": {},
+  "metadata": {
+    "description": "{{EXTENSION_DESCRIPTION}}",
+    "version": "v1",
+    "author": "{{AUTHOR}}"
+  }
+}
+

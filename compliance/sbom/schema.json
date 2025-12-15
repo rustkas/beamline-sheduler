@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SBOM Template Schema",
+  "description": "JSON Schema for validating SBOM.template.json structure",
+  "type": "object",
+  "required": ["name", "version", "components"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Project name"
+    },
+    "version": {
+      "type": "string",
+      "description": "Project version"
+    },
+    "description": {
+      "type": "string",
+      "description": "Project description"
+    },
+    "format": {
+      "type": "string",
+      "description": "SBOM format identifier (e.g., spdx-2.3)"
+    },
+    "created": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of SBOM creation"
+    },
+    "components": {
+      "type": "array",
+      "description": "Array of software components",
+      "items": {
+        "type": "object",
+        "required": ["name", "version", "license"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Component name"
+          },
+          "version": {
+            "type": "string",
+            "description": "Component version"
+          },
+          "license": {
+            "type": "string",
+            "description": "Component license (SPDX identifier)"
+          },
+          "type": {
+            "type": "string",
+            "description": "Component type (e.g., library, application)"
+          },
+          "purl": {
+            "type": "string",
+            "description": "Package URL (purl)"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional notes about the component"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "General notes about the SBOM"
+    }
+  }
+}
+
