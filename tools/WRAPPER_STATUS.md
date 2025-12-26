@@ -23,7 +23,7 @@ All 14 TypeScript MCP servers now use `MCPServerWrapper`:
 
 - **Source**: `tools/shared/mcp-server-wrapper.ts`
 - **Copies**: `tools/*/src/mcp-server-wrapper.ts` (one per server)
-- **Documentation**: `docs/dev/MCP_TRAE_WORKAROUND.md`
+- **Documentation**: `docs/archive/dev/MCP_TRAE_WORKAROUND.md`
 
 ## Verification
 

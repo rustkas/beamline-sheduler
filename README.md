@@ -263,7 +263,7 @@ Development state management and HMAC-chain audit are provided by TRAE IDE tooli
 - Scripts: use `devstate-tools/devstate/scripts/devstate_export.sh` and `devstate-tools/devstate/scripts/devstate_verify.sh` to interact with the server.
 
 ### Router Dev Quickstart
-- Start here: `docs/dev/ROUTER_DEV_QUICKSTART.md` — run Router + DevState + NATS, switch CP, enable CP2+ features, and run fast tests.
+- Start here: `docs/archive/dev/ROUTER_DEV_QUICKSTART.md` — run Router + DevState + NATS, switch CP, enable CP2+ features, and run fast tests.
 
 ## Checkpoints (CP)
 
@@ -290,7 +290,7 @@ Development state management and HMAC-chain audit are provided by TRAE IDE tooli
 - Metrics and tracing
 - Tests (unit and integration)
 
-**Specification**: `docs/dev/CP1_ROUTER_SPEC.md`  
+**Specification**: `docs/archive/dev/CP1_ROUTER_SPEC.md`  
 **ADR**: `docs/ADR/ADR-016-c-gateway-migration.md`
 
 ### CP2-LC: Enhanced Features 🔄
@@ -304,14 +304,19 @@ Development state management and HMAC-chain audit are provided by TRAE IDE tooli
 - ✅ Tenant validation/ACL enforcement
 - ✅ Admin gRPC service
 
-**Current Tasks**: See `docs/dev/CP2_READINESS_ROUTER_GATEWAY_UPDATED.md`
+**Current Tasks**: See `docs/archive/dev/CP2_READINESS_ROUTER_GATEWAY_UPDATED.md`
 
-### CP3-LC: Worker CAF ✅
+### CP3-LC: Worker CAF & Ops Readiness ✅
 **Status**: Completed  
-**Goal**: High-performance compute engine with actor-based runtime
+**Goal**: High-performance compute engine and Operational Readiness
 
 **Component Completed**:
 - ✅ **Worker CAF**: C++/CAF compute engine - `apps/caf/processor/`
+- ✅ **Ops Readiness**:
+    - Structured JSONL logging (Router & Gateway)
+    - Graceful Shutdown (Router & Gateway)
+    - Degraded Mode & Resilience Verification
+    - Comprehensive Runbooks
 
 **Key Features**:
 - Actor-based runtime with resource pools (CPU/GPU/IO)
@@ -320,7 +325,7 @@ Development state management and HMAC-chain audit are provided by TRAE IDE tooli
 - Comprehensive observability (Prometheus metrics, OpenTelemetry tracing, JSON logs)
 - Sandbox mode, multi-tenant isolation, retry/timeout handling, DLQ support
 
-**Ready For**: Throughput testing
+**Ready For**: Throughput testing & UI Integration
 
 ### CP4: UI Integration 🚧
 **Status**: In Development  

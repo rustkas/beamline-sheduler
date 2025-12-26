@@ -17,9 +17,9 @@ Create a cross-linking network between the high-level Beamline Vision document a
 Target documents:
 
 - docs/BEAMLINE_VISION_AND_ARCHITECTURE.md
-- docs/dev/CP1_ARCHITECTURE_CHECKLIST.md
-- docs/dev/CP2_READINESS_ROUTER_GATEWAY.md
-- docs/dev/ORCHESTRATOR_ROUTER_ABI_BRIDGE.md
+- docs/archive/dev/CP1_ARCHITECTURE_CHECKLIST.md
+- docs/archive/dev/CP2_READINESS_ROUTER_GATEWAY.md
+- docs/archive/dev/ORCHESTRATOR_ROUTER_ABI_BRIDGE.md
 
 ---
 
@@ -33,12 +33,12 @@ Target documents:
 - Added a bilingual subsection:
   - 9.2.x CP2 and ABI bridge details / Детали CP2 и ABI bridge
 - The subsection includes navigation links:
-  - docs/dev/CP2_READINESS_ROUTER_GATEWAY.md — CP2 readiness and feature inventory for the Router/Gateway.
-  - docs/dev/ORCHESTRATOR_ROUTER_ABI_BRIDGE.md — ABI evolution bridge between the Orchestrator and the Router.
+  - docs/archive/dev/CP2_READINESS_ROUTER_GATEWAY.md — CP2 readiness and feature inventory for the Router/Gateway.
+  - docs/archive/dev/ORCHESTRATOR_ROUTER_ABI_BRIDGE.md — ABI evolution bridge between the Orchestrator and the Router.
 
 ### 2.2 CP1_ARCHITECTURE_CHECKLIST.md → Vision
 
-**File:** docs/dev/CP1_ARCHITECTURE_CHECKLIST.md  
+**File:** docs/archive/dev/CP1_ARCHITECTURE_CHECKLIST.md  
 **Location:** Intro / Purpose section
 
 - Added a bilingual Note block that:
@@ -50,7 +50,7 @@ Target documents:
 
 ### 2.3 CP2_READINESS_ROUTER_GATEWAY.md → Vision
 
-**File:** docs/dev/CP2_READINESS_ROUTER_GATEWAY.md  
+**File:** docs/archive/dev/CP2_READINESS_ROUTER_GATEWAY.md  
 **Location:** Context / Relation to Beamline Roadmap
 
 - Added a bilingual context paragraph that:
@@ -61,7 +61,7 @@ Target documents:
 
 ### 2.4 ORCHESTRATOR_ROUTER_ABI_BRIDGE.md → Vision
 
-**File:** docs/dev/ORCHESTRATOR_ROUTER_ABI_BRIDGE.md  
+**File:** docs/archive/dev/ORCHESTRATOR_ROUTER_ABI_BRIDGE.md  
 **Location:** Intro
 
 - Added bilingual introductory context that:

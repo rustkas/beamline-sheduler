@@ -2,7 +2,7 @@
 
 **Purpose**: Load testing for Router and Gateway rate limiting functionality
 
-**Reference**: `docs/dev/RATE_LIMITING_LOAD_TEST_PLAN.md`
+**Reference**: `docs/archive/dev/RATE_LIMITING_LOAD_TEST_PLAN.md`
 
 ## Overview
 
@@ -123,6 +123,6 @@ The test generates the following artifacts:
 
 ## Reference
 
-- `docs/dev/RATE_LIMITING_LOAD_TEST_PLAN.md` - Complete test plan
-- `docs/dev/RATE_LIMITING_OBSERVABILITY_SPEC.md` - Metrics specification
+- `docs/archive/dev/RATE_LIMITING_LOAD_TEST_PLAN.md` - Complete test plan
+- `docs/archive/dev/RATE_LIMITING_OBSERVABILITY_SPEC.md` - Metrics specification
 

@@ -23,7 +23,7 @@ Beamline Constructor uses a checkpoint-based development model. Each checkpoint 
 **Key Documents**:
 - `docs/BEAMLINE_VISION_AND_ARCHITECTURE.md` - Project vision and architecture
 - `docs/OPERATIONS_GUIDE_RU.md` - Operational routines and daily workflows
-- `docs/dev/PR_CHECKLIST.md` - PR validation checklist
+- `docs/archive/dev/PR_CHECKLIST.md` - PR validation checklist
 
 ### Pre-PR Checklist
 
@@ -227,7 +227,7 @@ The validation is automatically run in CI via `.github/workflows/router-observab
 
 ### PR Checklist
 
-See `docs/dev/PR_CHECKLIST.md` for complete PR checklist.
+See `docs/archive/dev/PR_CHECKLIST.md` for complete PR checklist.
 
 **Key Requirements**:
 1. ✅ All tests pass locally
@@ -323,7 +323,7 @@ rebar3 ct --suite router_jetstream_e2e_SUITE --case test_intermittent_ack_failur
 ### Development Guides
 
 - **Operations Guide**: `docs/OPERATIONS_GUIDE_RU.md`
-- **PR Checklist**: `docs/dev/PR_CHECKLIST.md`
+- **PR Checklist**: `docs/archive/dev/PR_CHECKLIST.md`
 - **Architecture**: `docs/BEAMLINE_VISION_AND_ARCHITECTURE.md`
 
 ### Validation Scripts

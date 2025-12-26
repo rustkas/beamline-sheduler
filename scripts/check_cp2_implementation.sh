@@ -12,8 +12,8 @@ WARNINGS=0
 echo "=== CP2 Implementation Verification ==="
 echo ""
 
-# Check required reports in docs/dev/
-echo "Checking reports in docs/dev/..."
+# Check required reports in docs/archive/dev/
+echo "Checking reports in docs/archive/dev/..."
 REPORTS=(
     "JETSTREAM_FORWARDING_NAK_IMPLEMENTATION.md"
     "JETSTREAM_NAK_IDEMPOTENCY_FIXES.md"
@@ -22,7 +22,7 @@ REPORTS=(
 )
 
 for report in "${REPORTS[@]}"; do
-    if [ -f "${ROUTER_DIR}/docs/dev/${report}" ]; then
+    if [ -f "${ROUTER_DIR}/docs/archive/dev/${report}" ]; then
         echo "  ✅ ${report}"
     else
         echo "  ❌ ${report} - NOT FOUND"

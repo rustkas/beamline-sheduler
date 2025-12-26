@@ -28,7 +28,7 @@
   - `bash scripts/gateway_router_contract_smoke.sh --router-only`
 - Expected:
   - Exit code 0; Router contract suite passes
-- Record in docs/dev/CP2_READINESS_ROUTER_GATEWAY.md
+- Record in docs/archive/dev/CP2_READINESS_ROUTER_GATEWAY.md
 
 ### DevState / Router Fallback Smoke
 
@@ -37,7 +37,7 @@
   - `bash scripts/devstate_router_fallback_smoke.sh --scenario all`
 - Expected:
   - Exit code 0; scenarios missing_state, invalid_json, no_drift_false pass
-- Record in docs/dev/CP2_READINESS_ROUTER_GATEWAY.md
+- Record in docs/archive/dev/CP2_READINESS_ROUTER_GATEWAY.md
 
 ---
 
@@ -63,13 +63,13 @@
   - `bash scripts/validate_cp2.sh`
 - Expected:
   - Exit code 0; feature flags, JetStream, idempotency, tracing, multi‑tenant checks green
-- Record in docs/dev/CP2_READINESS_ROUTER_GATEWAY.md
+- Record in docs/archive/dev/CP2_READINESS_ROUTER_GATEWAY.md
 
 ---
 
 ## Go/No‑Go CP2‑LC
 
-- Update in `docs/dev/CP2_TRANSITION_PLAN_ROUTER.md`:
+- Update in `docs/archive/dev/CP2_TRANSITION_PLAN_ROUTER.md`:
   - Mark CP1 smoke ✔, CP2 E2E ✔, validate_cp2 ✔
 - Optional summary report:
   - `reports/wrk-1-cp2-test-execution-report.md`

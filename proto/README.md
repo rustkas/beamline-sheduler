@@ -210,5 +210,5 @@ Gateway TypeScript DTOs should match protobuf structures:
 - [Protocol Buffers Guide](https://developers.google.com/protocol-buffers)
 - [NATS Subjects](docs/NATS_SUBJECTS.md)
 - [API Registry](docs/ARCHITECTURE/api-registry.md)
-- [Orchestrator ABI Bridge](docs/dev/ORCHESTRATOR_ROUTER_ABI_BRIDGE.md) - CP2+ Orchestrator fields migration guide
+- [Orchestrator ABI Bridge](docs/archive/dev/ORCHESTRATOR_ROUTER_ABI_BRIDGE.md) - CP2+ Orchestrator fields migration guide
 

@@ -1,0 +1,35 @@
+name: worker-ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-rust@v1
+        with:
+          rust-version: stable
+      - name: Start NATS
+        run: docker compose up -d nats
+      - name: Wait for NATS
+        run: |
+          for i in $(seq 1 30); do
+            nc -z 127.0.0.1 4222 && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Lint and Build
+        run: |
+          cd apps/worker
+          cargo check
+          cargo build --release
+      - name: Unit Tests
+        run: |
+          cd apps/worker
+          cargo test --lib --tests -q
+      - name: Integration Tests (ignored)
+        run: |
+          cd apps/worker
+          cargo test -- --ignored -q

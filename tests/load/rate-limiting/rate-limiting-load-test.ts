@@ -12,7 +12,7 @@
  * 6. Long-running exceed (sustained over-limit)
  * 7. Gateway + Router combined (E2E)
  * 
- * Reference: docs/dev/RATE_LIMITING_LOAD_TEST_PLAN.md
+ * Reference: docs/archive/dev/RATE_LIMITING_LOAD_TEST_PLAN.md
  */
 
 import axios, { AxiosError } from 'axios';

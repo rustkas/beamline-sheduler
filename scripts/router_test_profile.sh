@@ -60,7 +60,7 @@ OUTPUT:
   Profile report saved to: reports/router/test_profiles/
   Format: test_profile_<timestamp>.md
 
-For more information, see: docs/dev/ROUTER_TEST_PROFILE.md
+For more information, see: docs/archive/dev/ROUTER_TEST_PROFILE.md
 
 EOF
 }

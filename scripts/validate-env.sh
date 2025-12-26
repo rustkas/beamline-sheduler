@@ -108,32 +108,29 @@ for env_file in "${ENV_FILES_TO_CHECK[@]}"; do
     done
 done
 
-# Check Docker
+# Check Docker is running
 echo ""
 echo "🐳 Checking Docker..."
-if command -v docker >/dev/null 2>&1; then
-    if docker info >/dev/null 2>&1; then
-        echo "✅ Docker is running"
-    else
+if [[ "${1:-}" == "--no-docker" ]]; then
+    echo "⚠️  Skipping Docker checks (--no-docker flag used)"
+else
+    if ! command -v docker >/dev/null 2>&1; then
+        echo "❌ Docker is not installed"
+        ERRORS=$((ERRORS + 1))
+    elif ! docker info >/dev/null 2>&1; then
         echo "❌ Docker daemon is not running"
         ERRORS=$((ERRORS + 1))
+    else
+        echo "✅ Docker is running"
+        
+        # Check docker-compose
+        if ! command -v docker-compose >/dev/null 2>&1 && ! docker compose version >/dev/null 2>&1; then
+            echo "❌ docker-compose not found"
+            ERRORS=$((ERRORS + 1))
+        else
+            echo "✅ docker-compose available"
+        fi
     fi
-else
-    echo "❌ Docker is not installed"
-    ERRORS=$((ERRORS + 1))
-fi
-
-# Check docker-compose (support both docker-compose and docker compose plugin)
-DOCKER_COMPOSE_AVAILABLE=false
-if command -v docker-compose >/dev/null 2>&1; then
-    echo "✅ docker-compose is installed"
-    DOCKER_COMPOSE_AVAILABLE=true
-elif docker compose version >/dev/null 2>&1; then
-    echo "✅ docker compose plugin is available"
-    DOCKER_COMPOSE_AVAILABLE=true
-else
-    echo "❌ docker-compose is not installed (neither binary nor plugin)"
-    ERRORS=$((ERRORS + 1))
 fi
 
 # Check configuration files

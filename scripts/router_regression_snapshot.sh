@@ -63,7 +63,7 @@ OUTPUT:
   Snapshots are saved to: reports/router/snapshots/
   Format: router_snapshot_<commit>_<timestamp>.md
 
-For more information, see: docs/dev/ROUTER_REGRESSION_SNAPSHOTS.md
+For more information, see: docs/archive/dev/ROUTER_REGRESSION_SNAPSHOTS.md
 
 EOF
 }

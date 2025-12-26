@@ -47,16 +47,16 @@ pass() {
 
 # Expected extension-related documentation files
 EXPECTED_DOCS=(
-    "docs/dev/EXTENSIONS_PIPELINE_CHECK_REPORT.md"
-    "docs/dev/EXTENSIONS_PIPELINE_IMPLEMENTATION_REPORT.md"
-    "docs/dev/EXTENSIONS_PIPELINE_PERF_REPORT.md"
-    "docs/dev/EXTENSIONS_E2E_IMPLEMENTATION_REPORT.md"
-    "docs/dev/EXTENSIONS_CONTRACT_E2E_REPORT.md"
-    "docs/dev/EXTENSIONS_PIPELINE_UI_IMPLEMENTATION_REPORT.md"
-    "docs/dev/EXTENSIONS_PIPELINE_PRODUCTION_INTEGRATION_REPORT.md"
-    "docs/dev/EXTENSIONS_PIPELINE_PRODUCTION_INTEGRATION_PLAN.md"
-    "docs/dev/PIPELINE_COMPLEXITY_MANAGEMENT_REPORT.md"
-    "docs/dev/CP2_EXTENSIONS_IMPLEMENTATION_PLAN.md"
+    "docs/archive/dev/EXTENSIONS_PIPELINE_CHECK_REPORT.md"
+    "docs/archive/dev/EXTENSIONS_PIPELINE_IMPLEMENTATION_REPORT.md"
+    "docs/archive/dev/EXTENSIONS_PIPELINE_PERF_REPORT.md"
+    "docs/archive/dev/EXTENSIONS_E2E_IMPLEMENTATION_REPORT.md"
+    "docs/archive/dev/EXTENSIONS_CONTRACT_E2E_REPORT.md"
+    "docs/archive/dev/EXTENSIONS_PIPELINE_UI_IMPLEMENTATION_REPORT.md"
+    "docs/archive/dev/EXTENSIONS_PIPELINE_PRODUCTION_INTEGRATION_REPORT.md"
+    "docs/archive/dev/EXTENSIONS_PIPELINE_PRODUCTION_INTEGRATION_PLAN.md"
+    "docs/archive/dev/PIPELINE_COMPLEXITY_MANAGEMENT_REPORT.md"
+    "docs/archive/dev/CP2_EXTENSIONS_IMPLEMENTATION_PLAN.md"
     "docs/EXTENSIONS_API.md"
     "apps/otp/router/docs/EXTENSIONS_RUNBOOK.md"
     "apps/otp/router/docs/EXTENSIONS_SECURITY_GUIDE.md"
@@ -121,7 +121,7 @@ check_doc_links() {
     fi
     
     # Check if all extension reports are linked in CP2_EXTENSIONS_IMPLEMENTATION_PLAN.md
-    local plan_file="${PROJECT_ROOT}/docs/dev/CP2_EXTENSIONS_IMPLEMENTATION_PLAN.md"
+    local plan_file="${PROJECT_ROOT}/docs/archive/dev/CP2_EXTENSIONS_IMPLEMENTATION_PLAN.md"
     if [[ -f "${plan_file}" ]]; then
         local missing_links=0
         for doc in "${EXPECTED_DOCS[@]}"; do

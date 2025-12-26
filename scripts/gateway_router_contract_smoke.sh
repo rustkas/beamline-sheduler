@@ -57,7 +57,7 @@ TROUBLESHOOTING:
     - Check that mode is one of: --router-only, --gateway-only, --full
     - Use --help to see all available options
 
-For more information, see: docs/dev/GATEWAY_ROUTER_CONTRACT_SMOKE.md
+For more information, see: docs/archive/dev/GATEWAY_ROUTER_CONTRACT_SMOKE.md
 
 EOF
 }

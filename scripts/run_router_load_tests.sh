@@ -25,7 +25,7 @@ export LOAD_TEST_PARALLEL_WORKERS="$PARALLEL_WORKERS"
 
 # Run load tests
 echo "Running load tests..."
-rebar3 ct --suite router_intake_e2e_SUITE --group load_tests --verbose
+rebar3 ct --suite router_performance_load_SUITE --verbose
 
 echo ""
 echo "=== Load Tests Complete ==="
