@@ -1,15 +1,15 @@
+[submodule "apps/otp/router"]
+	path = apps/otp/router
+	url = git@github.com:rustkas/beamline-otp-router.git
 [submodule "apps/c-gateway"]
 	path = apps/c-gateway
 	url = git@github.com:rustkas/beamline-c-gateway.git
 [submodule "apps/caf"]
 	path = apps/caf
 	url = git@github.com:rustkas/beamline-caf.git
-[submodule "apps/ui_web"]
-	path = apps/ui_web
-	url = git@github.com:rustkas/beamline-ui-web.git
-[submodule "apps/otp/router"]
-	path = apps/otp/router
-	url = git@github.com:rustkas/beamline-otp-router.git
 [submodule "apps/worker"]
 	path = apps/worker
 	url = https://github.com/rustkas/beamline-worker.git
+[submodule "apps/ui_web"]
+	path = apps/ui_web
+	url = git@github.com:rustkas/beamline-ui-web.git

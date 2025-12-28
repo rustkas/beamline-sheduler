@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package beamline.worker.v1;
+
+// ExecAssignmentAck represents the acknowledgment from CAF Worker to Router
+// Published to NATS subject: caf.exec.assign.v1.ack
+message ExecAssignmentAck {
+  // Required fields
+  string assignment_id = 1;       // UUID string - From ExecAssignment.assignment_id
+  string status = 2;             // "accepted" | "rejected" | "error"
+  
+  // Optional fields
+  string message = 3;            // Status message (optional)
+  
+  // Optional correlation fields (for future use)
+  string request_id = 4;         // From ExecAssignment.request_id (optional)
+  string trace_id = 5;           // From ExecAssignment.correlation.trace_id (optional)
+  string tenant_id = 6;          // From ExecAssignment.tenant_id (optional)
+  int64 acknowledged_at = 7;     // Acknowledgment timestamp in milliseconds (optional)
+}
+

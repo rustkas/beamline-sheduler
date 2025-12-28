@@ -70,7 +70,6 @@ _github
 .windsurf
 .windsurfignore
 .trae
-worker
 sripts/windsurf_hooks/
 mcp-inventory.json
 docs

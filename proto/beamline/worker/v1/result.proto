@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package beamline.worker.v1;
+
+// ExecResult represents the execution result from CAF Worker to Router
+// Published to NATS subject: caf.exec.result.v1
+message ExecResult {
+  // Required fields
+  string assignment_id = 1;      // UUID string - From ExecAssignment.assignment_id
+  string request_id = 2;          // UUID string - From DecideRequest.request_id
+  string status = 3;              // "success" | "error" | "timeout" | "cancelled"
+  string provider_id = 4;         // Provider that executed the job (e.g., "openai:gpt-4o")
+  Job job = 5;                    // Job information
+  int64 latency_ms = 6;           // Actual execution latency in milliseconds (>= 0)
+  double cost = 7;                // Actual execution cost (>= 0)
+  
+  // Optional correlation fields
+  string trace_id = 8;            // From ExecAssignment.correlation.trace_id
+  string tenant_id = 9;           // From ExecAssignment.tenant_id
+  int64 timestamp = 10;           // Result timestamp in milliseconds (default: current time)
+  
+  // Optional error information (for status="error")
+  string error_code = 11;         // Error code (string format, if present)
+  string error_message = 12;      // Human-readable error message (optional)
+}
+
+// Job information
+message Job {
+  string type = 1;                // Job type (e.g., "text.generate")
+  map<string, string> metadata = 2; // Additional job metadata (optional)
+}
+
