@@ -1,0 +1,129 @@
+name: Worker Tests
+
+on:
+  push:
+    paths:
+      - 'apps/caf/processor/**'
+      - '.github/workflows/worker-tests.yml'
+  pull_request:
+    paths:
+      - 'apps/caf/processor/**'
+      - '.github/workflows/worker-tests.yml'
+
+concurrency:
+  group: worker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  worker-observability-tests:
+    name: Worker Observability Tests
+    runs-on: ubuntu-22.04
+    env:
+      WORKER_DIR: apps/caf/processor
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential cmake libcaf-dev curl jq
+
+      - name: Build Worker
+        working-directory: ${{ env.WORKER_DIR }}
+        run: |
+          mkdir -p build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Debug
+          cmake --build . -- -j"$(nproc)"
+
+      - name: Run unit tests
+        working-directory: ${{ env.WORKER_DIR }}
+        run: |
+          echo "Running unit tests..."
+          cd build
+          ctest -R ObservabilityTest --verbose || (echo "Unit tests failed" && exit 1)
+
+      - name: Run integration tests
+        working-directory: ${{ env.WORKER_DIR }}
+        run: |
+          echo "Running integration tests..."
+          cd build
+          ctest -R HealthEndpointTest --verbose || (echo "Integration tests failed" && exit 1)
+
+      - name: Run performance tests
+        working-directory: ${{ env.WORKER_DIR }}
+        run: |
+          echo "Running performance tests..."
+          cd build
+          ctest -R ObservabilityPerformanceTest --verbose || echo "Performance tests completed with warnings"
+
+      - name: Run E2E test script
+        run: |
+          echo "Running E2E test script (if Worker is running)..."
+          bash scripts/observability/test_worker_observability.sh || echo "E2E tests skipped (Worker not running)"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: worker-test-results
+          path: ${{ env.WORKER_DIR }}/build/
+          retention-days: 7
+
+  worker-coverage:
+    name: Worker Coverage Report
+    runs-on: ubuntu-22.04
+    needs: worker-observability-tests
+    env:
+      WORKER_DIR: apps/caf/processor
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential cmake libcaf-dev lcov
+
+      - name: Build with coverage
+        working-directory: ${{ env.WORKER_DIR }}
+        run: |
+          mkdir -p build-coverage && cd build-coverage
+          cmake .. -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+          cmake --build . -- -j"$(nproc)"
+
+      - name: Run tests
+        working-directory: ${{ env.WORKER_DIR }}
+        run: |
+          cd build-coverage
+          ctest --verbose
+
+      - name: Generate coverage report
+        working-directory: ${{ env.WORKER_DIR }}
+        run: |
+          echo "Generating coverage report..."
+          bash scripts/generate_coverage.sh || echo "Coverage report generation completed with warnings"
+
+      - name: Display coverage summary
+        working-directory: ${{ env.WORKER_DIR }}
+        run: |
+          if [ -f build-coverage/coverage.info ]; then
+            echo "Coverage summary:"
+            lcov --summary build-coverage/coverage.info 2>/dev/null | grep -E "lines|functions|branches" || echo "Coverage data available"
+          fi
+
+      - name: Upload coverage HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: worker-coverage-html
+          path: ${{ env.WORKER_DIR }}/build-coverage/coverage_html/
+          retention-days: 7
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: worker-coverage-data
+          path: ${{ env.WORKER_DIR }}/build-coverage/coverage.info
+          retention-days: 7

@@ -1,0 +1,67 @@
+name: CP2 Validation
+
+on:
+  push:
+    branches: [main, develop, feature/cp2-*]
+    paths:
+      - 'apps/otp/router/**'
+      - 'scripts/validate_cp2.sh'
+      - '.github/workflows/validate-cp2.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/otp/router/**'
+      - 'scripts/validate_cp2.sh'
+
+jobs:
+  validate-cp2:
+    runs-on: ubuntu-latest
+    
+    services:
+      nats:
+        image: nats:2.10-alpine
+        ports:
+          - 4222:4222
+          - 8222:8222
+        options: >-
+          --health-cmd "wget --no-verbose --tries=1 --spider http://localhost:8222/healthz || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Erlang/OTP
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: '26.0'
+          rebar3-version: '3.22'
+      
+      - name: Install NATS CLI
+        run: |
+          curl -sf https://binaries.nats.dev/nats-io/natscli/nats@latest | sh
+          sudo mv nats /usr/local/bin/
+          nats --version
+      
+      - name: Run CP2 Validation Suite
+        run: bash scripts/validate_cp2.sh
+        env:
+          NATS_URL: nats://localhost:4222
+      
+      - name: Check Extensions Documentation Sync
+        run: bash scripts/check_extensions_docs_sync.sh
+        continue-on-error: true
+      
+      - name: Upload Test Logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cp2-validation-logs
+          path: /tmp/*_test.log
+          if-no-files-found: ignore
+
+
+
+
+

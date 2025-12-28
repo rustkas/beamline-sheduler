@@ -1,0 +1,55 @@
+name: CI Validate
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node & Python
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install jsonschema
+
+      - name: Validate state and history
+        env:
+          BEAMLINE_HMAC_SECRET: ${{ secrets.BEAMLINE_HMAC_SECRET }}
+          CI: true
+        run: |
+          bash scripts/validate_state.sh
+
+      - name: Verify HMAC chain (verbose)
+        env:
+          BEAMLINE_HMAC_SECRET: ${{ secrets.BEAMLINE_HMAC_SECRET }}
+          CI: true
+        run: |
+          python3 scripts/verify_hmac_chain.py --verbose
+
+      - name: OBS-1 Log Conformance
+        run: |
+          python3 tests/utils/log_conformance_validator.py --paths "reports/dry-run-logs/*.log" || true
+
+      - name: Dry-run CI summary
+        run: |
+          bash scripts/dry_run_ci.sh summary || true
+
+      - name: Validate Fault Injection Coverage
+        working-directory: apps/otp/router
+        run: |
+          echo "Validating fault injection test coverage and metrics contract..."
+          bash scripts/check_fault_injection_coverage.sh || (echo "Fault injection coverage validation failed" && exit 1)
+

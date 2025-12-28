@@ -1,18 +1,41 @@
-name: worker-ci
+name: CI
+
 on:
   push:
+    branches: [main, master]
   pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-test:
+  gateway-tests:
+    name: Gateway - Build & Test
+    uses: ./.github/workflows/gateway-tests.yml
+
+  router-tests:
+    name: Router - Build & Test
+    uses: ./.github/workflows/router-tests.yml
+
+  worker-tests:
+    name: Worker - Build & Test
+    uses: ./.github/workflows/worker-tests.yml
+
+  rust-worker:
+    name: Rust Worker - Build & Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-rust@v1
         with:
           rust-version: stable
+      
       - name: Start NATS
         run: docker compose up -d nats
+      
       - name: Wait for NATS
         run: |
           for i in $(seq 1 30); do
@@ -20,16 +43,33 @@ jobs:
             sleep 1
           done
           exit 1
+      
       - name: Lint and Build
         run: |
           cd apps/worker
           cargo check
           cargo build --release
+      
       - name: Unit Tests
         run: |
           cd apps/worker
           cargo test --lib --tests -q
+      
       - name: Integration Tests (ignored)
         run: |
           cd apps/worker
           cargo test -- --ignored -q
+
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [gateway-tests, router-tests, worker-tests, rust-worker]
+    if: always()
+    steps:
+      - name: Check test results
+        run: |
+          echo "## CI Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Gateway Tests: ${{ needs.gateway-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Router Tests: ${{ needs.router-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Worker Tests: ${{ needs.worker-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Rust Worker: ${{ needs.rust-worker.result }}" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,74 @@
+name: DevState Hooks Tests
+
+on:
+  workflow_call:
+    inputs:
+      continue_on_error:
+        description: "Do not fail pipeline on hook tests"
+        type: boolean
+        default: false
+      timeout_minutes:
+        description: "Job timeout in minutes"
+        type: number
+        default: 5
+
+jobs:
+  hooks:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout_minutes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare logs directory
+        run: |
+          mkdir -p reports/devstate-hooks
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps for DevState validation
+        run: |
+          python -m pip install --upgrade pip
+          pip install jsonschema
+          sudo apt-get update && sudo apt-get install -y jq || true
+
+      - name: Export CI env
+        run: |
+          echo "BEAMLINE_HMAC_SECRET=dev-secret-not-for-prod" >> "$GITHUB_ENV"
+          echo "CI=true" >> "$GITHUB_ENV"
+
+      - name: Environment probe
+        run: |
+          {
+            echo "Runner: $(uname -a)";
+            echo "git: $(git --version || echo missing)";
+            echo "bash: $BASH_VERSION";
+            echo "python3: $(python3 --version || echo missing)";
+            echo "jq: $(jq --version || echo missing)";
+            echo "curl: $(curl --version | head -n1 || echo missing)";
+          } | tee reports/devstate-hooks/env.log
+
+      - name: Run DevState hooks install test
+        run: |
+          bash tests/hooks/install_hooks.test.sh | tee reports/devstate-hooks/install_hooks.log
+        continue-on-error: ${{ inputs.continue_on_error }}
+
+      - name: Run pre-commit hook test
+        run: |
+          bash tests/hooks/pre_commit.test.sh | tee reports/devstate-hooks/pre_commit.log
+        continue-on-error: ${{ inputs.continue_on_error }}
+
+      - name: Run pre-push hook test
+        run: |
+          bash tests/hooks/pre_push.test.sh | tee reports/devstate-hooks/pre_push.log
+        continue-on-error: ${{ inputs.continue_on_error }}
+
+      - name: Upload DevState hooks logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: devstate-hooks-logs
+          path: reports/devstate-hooks
