@@ -53,8 +53,8 @@ graph TD
 
 ```bash
 # Clone the repository
-git clone https://github.com/beamline/beamline.git
-cd beamline
+git clone https://github.com/rustkas/beamline-sheduler.git
+cd beamline-sheduler
 
 # Start the development environment
 docker-compose up -d
