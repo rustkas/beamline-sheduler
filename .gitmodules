@@ -10,3 +10,6 @@
 [submodule "apps/otp/router"]
 	path = apps/otp/router
 	url = git@github.com:rustkas/beamline-otp-router.git
+[submodule "apps/worker"]
+	path = apps/worker
+	url = https://github.com/rustkas/beamline-worker.git
