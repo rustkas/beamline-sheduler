@@ -1,6 +1,6 @@
 version: '3.9'
 
-# Beamline Constructor - Local Development Stack
+# BeamLine Constructor - Local Development Stack
 # Services: PostgreSQL, NATS, Router (Erlang/OTP), Gateway (NestJS)
 
 networks:

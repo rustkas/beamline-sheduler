@@ -1,6 +1,6 @@
 # Protocol Buffers Definitions
 
-This directory contains Protocol Buffers (protobuf) definitions for Beamline Constructor services.
+This directory contains Protocol Buffers (protobuf) definitions for BeamLine Constructor services.
 
 ## Structure
 

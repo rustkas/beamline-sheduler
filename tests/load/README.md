@@ -1,6 +1,6 @@
-# Beamline Constructor - CP4-LC Load Testing Suite
+# BeamLine Constructor - CP4-LC Load Testing Suite
 
-This directory contains comprehensive load testing scripts for validating CP4-LC (End-to-End Integration) requirements in the Beamline Constructor project.
+This directory contains comprehensive load testing scripts for validating CP4-LC (End-to-End Integration) requirements in the BeamLine Constructor project.
 
 ## Overview
 

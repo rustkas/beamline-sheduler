@@ -1,4 +1,4 @@
-# Beamline Scheduler
+# BeamLine Scheduler
 
 > Distributed workflow orchestration platform with high-performance execution engines
 
@@ -9,11 +9,11 @@
 
 ## 🚀 Overview
 
-**Beamline Scheduler** is a distributed, polyglot workflow orchestration platform designed for high-performance task execution and intelligent routing. Built with production-grade reliability, observability, and scalability in mind.
+**BeamLine Scheduler** is a distributed, polyglot workflow orchestration platform designed for high-performance task execution and intelligent routing. Built with production-grade reliability, observability, and scalability in mind.
 
-### What is Beamline Scheduler?
+### What is BeamLine Scheduler?
 
-Beamline Scheduler coordinates complex workflows across distributed systems by intelligently routing requests, executing tasks with specialized workers, and providing comprehensive monitoring and management capabilities.
+BeamLine Scheduler coordinates complex workflows across distributed systems by intelligently routing requests, executing tasks with specialized workers, and providing comprehensive monitoring and management capabilities.
 
 **Key Characteristics:**
 - **Polyglot Architecture**: Erlang/OTP for routing, C for high-performance gateway, C++ and Rust for worker execution, Phoenix LiveView for UI

@@ -1,4 +1,4 @@
-# WRK‑2 REPORT — Task G.1: Cross-link Beamline Vision ↔ CP1/CP2/ABI Bridge
+# WRK‑2 REPORT — Task G.1: Cross-link BeamLine Vision ↔ CP1/CP2/ABI Bridge
 
 **Worker:** wrk‑2  
 **Task ID:** G.1  
@@ -9,7 +9,7 @@
 
 ## 1. Objective
 
-Create a cross-linking network between the high-level Beamline Vision document and the CP1/CP2/ABI bridge documents, so that a reader can easily navigate:
+Create a cross-linking network between the high-level BeamLine Vision document and the CP1/CP2/ABI bridge documents, so that a reader can easily navigate:
 
 - from the product vision and roadmap (Vision) to implementation-level specs (CP2 readiness, ABI bridge), and
 - from CP1/CP2/ABI documents back to the Vision as the single source of truth for roadmap and architecture.
@@ -42,7 +42,7 @@ Target documents:
 **Location:** Intro / Purpose section
 
 - Added a bilingual Note block that:
-  - Clarifies CP1-ROUTER as one checkpoint within the broader Beamline roadmap.
+  - Clarifies CP1-ROUTER as one checkpoint within the broader BeamLine roadmap.
   - Points to docs/BEAMLINE_VISION_AND_ARCHITECTURE.md as the source of:
     - high-level product vision,
     - component map,
@@ -51,7 +51,7 @@ Target documents:
 ### 2.3 CP2_READINESS_ROUTER_GATEWAY.md → Vision
 
 **File:** docs/archive/dev/CP2_READINESS_ROUTER_GATEWAY.md  
-**Location:** Context / Relation to Beamline Roadmap
+**Location:** Context / Relation to BeamLine Roadmap
 
 - Added a bilingual context paragraph that:
   - States this document is the implementation-level readiness and gap analysis for CP2 (“Transport Online”).
@@ -65,7 +65,7 @@ Target documents:
 **Location:** Intro
 
 - Added bilingual introductory context that:
-  - Explains this ABI bridge spec describes how the contract between Orchestrator and Router evolves across Beamline checkpoints.
+  - Explains this ABI bridge spec describes how the contract between Orchestrator and Router evolves across BeamLine checkpoints.
   - Links to docs/BEAMLINE_VISION_AND_ARCHITECTURE.md for:
     - overall product vision,
     - component map,

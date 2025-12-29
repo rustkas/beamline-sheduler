@@ -1,5 +1,5 @@
 # Prometheus Configuration for Local Development
-# Scrapes metrics from all Beamline components
+# Scrapes metrics from all BeamLine components
 
 global:
   scrape_interval: 15s

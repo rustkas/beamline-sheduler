@@ -1,6 +1,6 @@
-# Beamline Extensions (Reference Implementation)
+# BeamLine Extensions (Reference Implementation)
 
-Reference extensions for Beamline Router E2E testing.
+Reference extensions for BeamLine Router E2E testing.
 
 ## Extensions
 

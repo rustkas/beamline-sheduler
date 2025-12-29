@@ -1,6 +1,6 @@
 # Docker Infrastructure
 
-**Purpose**: Minimal Docker configuration for Beamline Constructor services.
+**Purpose**: Minimal Docker configuration for BeamLine Constructor services.
 
 ## Structure
 

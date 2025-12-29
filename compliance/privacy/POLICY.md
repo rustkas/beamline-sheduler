@@ -6,7 +6,7 @@
 
 ## Purpose
 
-This policy defines data privacy requirements for the Beamline Constructor project, including PII handling, logging policies, and data retention.
+This policy defines data privacy requirements for the BeamLine Constructor project, including PII handling, logging policies, and data retention.
 
 ## PII Categories
 

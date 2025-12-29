@@ -1,6 +1,6 @@
-# Contributing to Beamline Constructor
+# Contributing to BeamLine Constructor
 
-Thank you for contributing to Beamline Constructor! This guide will help you understand our development process and ensure your contributions align with project standards.
+Thank you for contributing to BeamLine Constructor! This guide will help you understand our development process and ensure your contributions align with project standards.
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ Thank you for contributing to Beamline Constructor! This guide will help you und
 
 ### Checkpoints (CP)
 
-Beamline Constructor uses a checkpoint-based development model. Each checkpoint represents a milestone with specific validation gates.
+BeamLine Constructor uses a checkpoint-based development model. Each checkpoint represents a milestone with specific validation gates.
 
 **Current Checkpoint**: CP1-LC (Operational Readiness)
 

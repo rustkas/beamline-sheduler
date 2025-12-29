@@ -1,6 +1,6 @@
-# Beamline MCP Servers
+# BeamLine MCP Servers
 
-This directory contains all MCP (Model Context Protocol) servers for the Beamline project.
+This directory contains all MCP (Model Context Protocol) servers for the BeamLine project.
 
 ## Structure
 
