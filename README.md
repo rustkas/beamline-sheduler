@@ -1,366 +1,407 @@
-# Beamline Constructor
+# Beamline Scheduler
+
+> Distributed workflow orchestration platform with high-performance execution engines
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Build Status](https://ci.beamline.example.com/api/badges/beamline/beamline/status.svg)](https://ci.beamline.example.com/beamline/beamline)
-[![Documentation Status](https://readthedocs.org/projects/beamline/badge/?version=latest)](https://docs.beamline.ai)
+[![Erlang/OTP](https://img.shields.io/badge/Erlang-26+-red.svg)](https://www.erlang.org/)
+[![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://www.rust-lang.org/)
+[![Phoenix](https://img.shields.io/badge/Phoenix-1.8-orange.svg)](https://phoenixframework.org/)
 
 ## 🚀 Overview
 
-Beamline Constructor is an **operating system for AI factories** (AI Production Line) - a unified orchestrator platform where AI agents, API services, and humans work as one cohesive system.
+**Beamline Scheduler** is a distributed, polyglot workflow orchestration platform designed for high-performance task execution and intelligent routing. Built with production-grade reliability, observability, and scalability in mind.
 
-### ✨ Key Features
+### What is Beamline Scheduler?
 
-- **Unified Orchestration**: Seamlessly coordinate AI agents, APIs, and human workflows
-- **Production-Grade AI**: Deploy and manage AI models with enterprise-grade SLAs
-- **Secure by Design**: Built-in security and compliance at every layer
-- **Observability First**: Comprehensive monitoring, tracing, and logging
-- **Extensible Architecture**: Plugin system for custom integrations
+Beamline Scheduler coordinates complex workflows across distributed systems by intelligently routing requests, executing tasks with specialized workers, and providing comprehensive monitoring and management capabilities.
+
+**Key Characteristics:**
+- **Polyglot Architecture**: Erlang/OTP for routing, C for high-performance gateway, C++ and Rust for worker execution, Phoenix LiveView for UI
+- **NATS-based Messaging**: Asynchronous, scalable communication between components
+- **Production-Ready**: Comprehensive observability, fault tolerance, and operational tooling
+- **Modular Design**: Each component can be deployed and scaled independently
 
 ## 🏗️ Architecture
 
-Beamline Constructor is built on a modern, distributed architecture:
-
-```mermaid
-graph TD
-    A[Client] -->|HTTP/2 gRPC| B[C-Gateway]
-    B -->|NATS| C[Router]
-    C -->|NATS| D[Worker CAF]
-    C -->|NATS| E[Extensions]
-    F[UI] -->|WebSockets| B
-    G[Admin Tools] -->|gRPC| C
+```
+┌─────────────┐
+│   Client    │
+└──────┬──────┘
+       │ HTTP/gRPC
+       ▼
+┌─────────────────┐
+│   C-Gateway     │  ← High-performance API Gateway (C11)
+│  (Port 8080)    │
+└────────┬────────┘
+         │ NATS
+         ▼
+┌──────────────────┐
+│  Erlang Router   │  ← Intelligent routing & orchestration (Erlang/OTP 26)
+│  (gRPC: 9000)    │
+└────────┬─────────┘
+         │ NATS
+    ┌────┴────┬──────────┐
+    ▼         ▼          ▼
+┌────────┐ ┌────────┐ ┌─────────┐
+│ Worker │ │ Worker │ │  CAF    │
+│ (Rust) │ │ (C++)  │ │Processor│
+└────────┘ └────────┘ └─────────┘
+    │
+    ▼
+┌──────────────┐
+│  Phoenix UI  │  ← Management interface (Phoenix LiveView)
+│ (Port 4000)  │
+└──────────────┘
 ```
 
-### Core Components
+## 📦 Components
 
-| Component | Description | Status |
-|-----------|-------------|--------|
-| [C-Gateway](apps/c-gateway) | High-performance API Gateway | ✅ Production Ready |
-| [Router](apps/otp/router) | Intelligent request routing & orchestration | ✅ Production Ready |
-| [Worker CAF](apps/caf/processor) | High-performance compute engine | ✅ Production Ready |
-| [UI](apps/ui_web) | Web-based management interface | 🚧 In Development |
-| [Extensions](docs/EXTENSIONS_QUICKSTART.md) | Pluggable services | 📦 Beta |
+### Core Services
+
+| Component | Technology | Status | Repository |
+|-----------|-----------|--------|------------|
+| **[C-Gateway](apps/c-gateway)** | C11 | ✅ Production Ready | [beamline-c-gateway](https://github.com/rustkas/beamline-c-gateway) |
+| **[Router](apps/otp/router)** | Erlang/OTP 26 | ✅ Production Ready | [beamline-otp-router](https://github.com/rustkas/beamline-otp-router) |
+| **[CAF Processor](apps/caf/processor)** | C++/CAF | ✅ Production Ready | [beamline-caf](https://github.com/rustkas/beamline-caf) |
+| **[Rust Worker](apps/worker)** | Rust | ✅ Production Ready | [beamline-worker](https://github.com/rustkas/beamline-worker) |
+| **[UI Web](apps/ui_web)** | Phoenix LiveView | 🚧 In Development | [beamline-ui-web](https://github.com/rustkas/beamline-ui-web) |
+
+### Component Details
+
+#### 🚪 C-Gateway
+**Purpose**: High-performance HTTP/gRPC API Gateway  
+**Features**:
+- HTTP REST API with NATS integration
+- Rate limiting and request validation
+- Health checks and metrics
+- Minimal latency overhead
+
+**Tech**: C11, libjansson, libnats, CMake
+
+#### 🧭 Erlang Router
+**Purpose**: Intelligent request routing and workflow orchestration  
+**Features**:
+- Policy-based routing (weights, sticky sessions, fallback)
+- RBAC and tenant isolation
+- JetStream integration with durable subscriptions
+- Idempotency layer (ETS-based with TTL)
+- Admin gRPC service
+- OpenTelemetry distributed tracing
+- Comprehensive NATS resilience patterns
+
+**Tech**: Erlang/OTP 26, NATS, gRPC, Prometheus
+
+#### ⚙️ CAF Processor
+**Purpose**: High-performance compute engine with actor-based runtime  
+**Features**:
+- Actor-based architecture with resource pools (CPU/GPU/IO)
+- Multi-tenant isolation with per-tenant quotas
+- Block executors (HTTP, FS, SQL, Human approval)
+- Sandbox mode for safe execution
+- Dead Letter Queue (DLQ) support
+
+**Tech**: C++20, CAF (C++ Actor Framework), Prometheus, OpenTelemetry
+
+#### 🦀 Rust Worker
+**Purpose**: Modular, high-performance job execution runtime  
+**Features**:
+- Async execution with Tokio
+- Modular handlers:
+  - HTTP (REST, GraphQL with retries)
+  - Scripting (JavaScript via Boa, JMESPath)
+  - Database (PostgreSQL with sqlx)
+  - File System (secure blob operations)
+  - Human interaction (approval workflows)
+- NATS protocol integration
+- Graceful shutdown and DLQ rotation
+
+**Tech**: Rust, Tokio, NATS, PostgreSQL
+
+#### 🎨 Phoenix UI
+**Purpose**: Real-time web management interface  
+**Features**:
+- Real-time workflow monitoring (LiveView)
+- Extension management
+- Message system with pagination
+- SSE for live updates
+- OIDC/OAuth2 authentication
+
+**Tech**: Elixir, Phoenix LiveView, TailwindCSS, DaisyUI
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
+```bash
+# Required
 - Docker & Docker Compose
+- Git with submodules support
+
+# For local development
 - Erlang/OTP 26+
-- C++20 compatible compiler
-- Node.js 18+ (for UI development)
+- Rust 1.70+
+- C++20 compiler (g++ or clang)
+- C11 compiler
+- Elixir 1.15+ (for UI)
+- NATS Server 2.9+
+```
 
 ### Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/rustkas/beamline-sheduler.git
+# Clone with submodules
+git clone --recursive https://github.com/rustkas/beamline-sheduler.git
 cd beamline-sheduler
 
-# Start the development environment
+# Or if already cloned, initialize submodules
+git submodule init
+git submodule update --recursive
+
+# Start with Docker Compose
 docker-compose up -d
 
-# Access the web UI (after containers are up)
-open http://localhost:4000
+# Verify services
+curl http://localhost:8080/_health  # C-Gateway
+curl http://localhost:4000/health   # Phoenix UI (if running)
 ```
+
+### Building Components Individually
+
+#### C-Gateway
+```bash
+cd apps/c-gateway
+make
+make test
+./build/c-gateway
+```
+
+#### Erlang Router
+```bash
+cd apps/otp/router
+rebar3 get-deps
+rebar3 compile
+rebar3 ct  # Run tests
+```
+
+#### CAF Processor
+```bash
+cd apps/caf/processor
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+ctest  # Run tests
+```
+
+#### Rust Worker
+```bash
+cd apps/worker
+cargo build --release
+cargo test
+cargo run --release
+```
+
+#### Phoenix UI
+```bash
+cd apps/ui_web
+mix setup
+mix phx.server
+```
+
+## 📊 Service Endpoints
+
+| Service | Port | Health Check | Metrics |
+|---------|------|--------------|---------|
+| C-Gateway | 8080 | `GET /_health` | `GET /metrics` |
+| Router (gRPC) | 9000 | gRPC health probe | Prometheus metrics |
+| CAF Processor | 9090 | `GET /health` | `GET /metrics` |
+| Rust Worker | 9091 | `GET /health` | `GET /metrics` |
+| Phoenix UI | 4000 | `GET /health` | Built-in LiveDashboard |
+| NATS | 4222 | - | HTTP monitoring :8222 |
+
+## 🔧 Configuration
+
+### Environment Variables
+
+**C-Gateway:**
+```bash
+GATEWAY_BASE_URL=http://localhost:8080
+NATS_URL=nats://localhost:4222
+ROUTER_DECIDE_SUBJECT=beamline.router.v1.decide
+```
+
+**Router:**
+```bash
+NATS_URL=nats://localhost:4222
+ROUTER_GRPC_PORT=9000
+```
+
+**Workers:**
+```bash
+NATS_URL=nats://localhost:4222
+WORKER_MAX_CONCURRENCY=8
+```
+
+**Phoenix UI:**
+```bash
+PORT=4000
+GATEWAY_BASE_URL=http://localhost:8080
+AUTH_ENABLED=false
+```
+
+See individual component READMEs for full configuration options.
+
+## 🧪 Testing
+
+### Run All Tests
+
+```bash
+# Gateway tests
+cd apps/c-gateway && make test
+
+# Router tests
+cd apps/otp/router && rebar3 ct
+
+# CAF tests
+cd apps/caf/processor && ctest
+
+# Worker tests
+cd apps/worker && cargo test
+
+# UI tests
+cd apps/ui_web && mix test
+```
+
+### Integration Tests
+
+```bash
+# Full integration test suite (requires running services)
+bash scripts/run_integration_tests.sh
+```
+
+## 📈 Observability
+
+### Metrics (Prometheus)
+
+All components expose Prometheus-compatible metrics:
+- Request/response rates and latencies
+- Resource utilization (CPU, memory, goroutines)
+- Queue depths and backlog
+- Error rates and types
+- Business metrics (tasks executed, jobs completed)
+
+### Tracing (OpenTelemetry)
+
+Distributed tracing across all components with span propagation via NATS headers.
+
+### Logging
+
+- **Structured JSON logs** across all components
+- **Correlation IDs** for request tracking
+- **Log levels** configurable per component
+
+### Health Checks
+
+All services implement health and readiness probes for Kubernetes deployments.
+
+## 🚢 Deployment
+
+### Docker Compose (Development)
+
+```bash
+docker-compose up -d
+```
+
+### Kubernetes (Production)
+
+```bash
+# Apply Kubernetes manifests
+kubectl apply -f infra/k8s/
+
+# Or use Helm (if charts available)
+helm install beamline ./charts/beamline
+```
+
+### Systemd (Bare Metal)
+
+Each component can run as a systemd service. See individual component READMEs.
+
+## 🔐 Security
+
+- **RBAC**: Role-based access control in Router
+- **Tenant Isolation**: Multi-tenancy support with quotas
+- **TLS Support**: NATS connections support TLS
+- **Input Validation**: All inputs validated before processing
+- **Audit Logging**: Comprehensive audit trail
+- **Path Sandboxing**: File operations restricted to safe directories
+- **SQL Injection Prevention**: Parameterized queries only
 
 ## 📚 Documentation
 
-For comprehensive documentation, please visit our [documentation portal](https://docs.beamline.ai) or explore the following key resources:
-
+### Core Documentation
 - [Architecture Overview](docs/ARCHITECTURE.md)
-- [API Reference](docs/API_CONTRACTS.md)
+- [API Contracts](docs/API_CONTRACTS.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
-- [Developer Guide](docs/DEVELOPER_GUIDE.md)
-- [Operational Guide](docs/OPERATIONS_GUIDE_RU.md)
+- [Operations Guide](docs/OPERATIONS_GUIDE_RU.md)
+- [Contributing Guide](CONTRIBUTING.md)
+
+### Component Documentation
+- [C-Gateway README](apps/c-gateway/README.md)
+- [Router README](apps/otp/router/README.md)
+- [CAF Processor README](apps/caf/processor/README.md)
+- [Rust Worker README](apps/worker/README.md)
+- [Phoenix UI README](apps/ui_web/README.md)
+
+## 🗺️ Roadmap
+
+### Current Status (January 2025)
+
+- ✅ **CP0**: Repository structure and specifications
+- ✅ **CP1**: Router core + C-Gateway
+- ✅ **CP2**: Enhanced features (JetStream, idempotency, tracing)
+- ✅ **CP3**: Worker CAF & Rust Worker + Ops readiness
+- 🚧 **CP4**: Phoenix UI integration (in progress)
+- 📅 **CP5**: Full production deployment
+
+### Planned Features
+
+- **Advanced Scheduling**: Priority-based and deadline-aware scheduling
+- **Streaming Support**: Real-time data streaming workflows
+- **Plugin System**: Dynamic extension loading
+- **Multi-cluster**: Cross-cluster workflow orchestration
+- **Cost Optimization**: Resource usage tracking and optimization
+- **Auto-scaling**: Dynamic worker scaling based on load
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to:
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-- Report issues
-- Submit pull requests
-- Set up your development environment
-- Follow our coding standards
+### Development Setup
+
+1. Fork the repository
+2. Clone with submodules: `git clone --recursive`
+3. Create a feature branch
+4. Make changes and add tests
+5. Run full test suite
+6. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+Built with:
+- [Erlang/OTP](https://www.erlang.org/) - Robust distributed systems
+- [NATS](https://nats.io/) - High-performance messaging
+- [C++ Actor Framework (CAF)](https://actor-framework.org/) - Actor-based concurrency
+- [Phoenix Framework](https://www.phoenixframework.org/) - Real-time web
+- [Rust](https://www.rust-lang.org/) - Systems programming
 
 ## 📞 Support
 
-For support, please:
-1. Check the [troubleshooting guide](docs/TROUBLESHOOTING.md)
-2. Search [existing issues](https://github.com/beamline/beamline/issues)
-3. Open a new issue if your problem isn't addressed
-   - See: `docs/EXTENSIONS_API.md`
+- **Issues**: [GitHub Issues](https://github.com/rustkas/beamline-sheduler/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/rustkas/beamline-sheduler/discussions)
 
-**For detailed component information**: See `docs/CORE_COMPONENTS.md` and `docs/SYSTEM_METADATA.md`
+---
 
-All other subprojects (Provider, Usage, DevState, Scripts, Tools, etc.) are **supporting tools** for development process.
-
-See [Core Components](docs/CORE_COMPONENTS.md) for detailed breakdown.
-
-### Important Note:
-**Development state management** (`.trae` files, DevState) is external development tooling and **not part of Beamline Constructor product logic**.
-
-See [official project vision](docs/BEAMLINE_OFFICIAL_VISION.md) and [tooling role](docs/TOOLING_TRAE_DEVSTATE_ROLE.md).
-
-## Principles
-
-- **No-Drift**: all artifacts are synchronized by versions, checksums are validated before checkpoint transitions
-- **Source of Truth**: ABI (protobuf), DDL (SQL), NATS subjects registry - single sources of truth
-- **Audit**: all operations are logged through Erlang-managed audit system (separate from TRAE development tooling)
-- **Checkpoints (CP)**: phased development with validation at each stage
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines and contribution process.
-
-**Important**: Any changes to JetStream, NATS, or Observability (OBS) components **MUST** update the formal coverage documentation:
-- Coverage Matrix: `apps/otp/router/docs/dev/JETSTREAM_OBS_COVERAGE_MATRIX.md`
-- Fault Injection Test Scenarios: `apps/otp/router/docs/dev/JETSTREAM_FAULT_INJECTION_TESTS.md`
-- Alert Rules Scenario IDs: `apps/otp/router/docs/observability/router-alert-rules.yaml`
-- Dashboard Panel Scenario IDs: `docs/OBSERVABILITY_ROUTER_DASHBOARD.md`
-
-See `CONTRIBUTING.md#jetstreamnatsob-changes` for detailed instructions.
-
-## Operational Readiness (CP1)
-
-### Status
-
-- **Compilation**: ✅ Successful
-- **Tests**: ✅ New integration tests added and compile
-- **Dialyzer**: ✅ Warnings addressed (dependencies updated, targeted nowarn)
-- **Configuration**: ✅ Finalized (NATS TLS, timeouts, reconnects)
-- **Documentation**: ✅ Updated across `CONFIG.md`, `API_CONTRACTS.md`, `ROUTER_CAF_GATING_CHECK_REPORT.md`, `apps/otp/router/docs/OPERATIONAL_GUIDE.md`
-
-### Key Artifacts
-
-- **`apps/otp/router/docs/OPERATIONAL_GUIDE.md`**: Pre-production checklist, configuration guidance, smoke tests, gradual rollout strategy, emergency procedures, monitoring recommendations
-- **New Integration Tests**: 
-  - `test_payload_size_limit/1`: Validates NATS payload size limit
-  - `test_version_validation_missing/1`: Validates missing version rejection
-  - `test_version_validation_unsupported/1`: Validates unsupported version rejection
-- **Updated Documentation**:
-  - `apps/otp/router/docs/ROUTER_CAF_GATING_CHECK_REPORT.md`: Dialyzer warnings details and resolution
-  - `apps/otp/router/docs/CONFIG.md`: NATS configuration (TLS, limits, timeouts)
-  - `apps/otp/router/docs/API_CONTRACTS.md`: Schema version validation rules
-
-### Staging Rollout Checklist
-
-Before deploying to staging, ensure:
-
-1. **Pre-Production Checklist**: Follow checklist in `apps/otp/router/docs/OPERATIONAL_GUIDE.md`
-2. **NATS Payload Size Limit**: Validate payload size limit before JSON parsing
-3. **Schema Version Validation**: Confirm validation for missing/unsupported versions
-4. **Retry Parameters**: Set `caf_max_retries` and `caf_retry_base_ms` per SLA/latency guidance
-5. **Smoke Tests**: Run 5 smoke tests from `OPERATIONAL_GUIDE.md` and monitor telemetry counters/spans
-6. **Kill-Switch and Allowlist**: Keep `caf_push_assignment_enabled` and `caf_push_assignment_allowed_tenants` aligned with access policies
-
-See `apps/otp/router/docs/OPERATIONAL_GUIDE.md` for detailed staging rollout plan.
-
-### Training Videos Quickstart
-
-**Recommended Topics** (for future video series):
-
-1. **Architecture Overview**: Router ↔ CAF modules, configuration, message flow
-2. **Quickstart with NATS TLS**: Setup, connection, verification
-3. **DecideRequest Validation**: Schema version rules and tests
-4. **ExecAssignment Publishing**: `push_assignment` flag and subject configuration
-5. **Deadlines**: `deadline_ms` calculation and overrides
-6. **Retry Logic**: Exponential backoff with jitter and counters
-7. **Publication Controls**: Kill-switch and tenant allowlist
-8. **Observability**: Telemetry counters and spans
-9. **Error Handling**: NATS limits, routing errors, schema versions
-10. **Smoke Tests & Dashboard**: Staging validation and monitoring
-
-## Quick Start
-
-### Local Development
-
-1. **Copy environment variables**:
-   ```bash
-   cp config/env/ENV_TEMPLATE.md .env
-   ```
-
-2. **Start services**:
-   ```bash
-   ./scripts/local/up.sh
-   ```
-
-3. **Check status**:
-   ```bash
-   docker compose ps
-   curl http://localhost:8080/_health
-   ```
-
-**Available commands**:
-- `./scripts/local/up.sh` - start services
-- `./scripts/local/down.sh` - stop services
-- `./scripts/local/build.sh` - build images
-- `./scripts/local/logs.sh` - view logs
-
-**Services**:
-- Gateway API: `http://localhost:8080`
-- NATS: `nats://localhost:4222`
-- NATS Monitoring: `http://localhost:8222`
-
-For more details: [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md)
-
-## Module Map
-
-### Applications (apps/)
-
-- **apps/otp/**: Erlang/OTP applications
-  - `apps/otp/router/`: routing core (Erlang)
-  - `apps/otp/usage/`: usage metrics collection (Erlang)
-  
-  > **Note**: LLM/API adapters (OpenAI, Anthropic, etc.) are implemented as **Custom Provider Extensions** (separate NATS services). See `docs/EXTENSIONS_API.md` for details.
-
-- **apps/c-gateway/**: C11 HTTP Gateway (REST API with NATS integration)
-
-- **apps/caf/**: C++ Actor Framework applications
-  - `apps/caf/processor/`: message processing (C++)
-
-- **apps/ui-web/**: Phoenix LiveView UI
-
-### Contracts (proto/)
-
-- `proto/beamline/flow/v1/flow.proto`: routing (Message, RouteRequest, RouteDecision)
-- `proto/beamline/provider/v1/provider.proto`: providers (ProviderRequest, ProviderResponse)
-
-### Data (sql/)
-
-- `sql/000_init.sql`: PostgreSQL schema (projects, api_keys, usage_events, policies, audit_logs)
-
-### Documentation (docs/)
-
-- `docs/ROUTING_POLICY.md`: JSON-DSL routing policies
-- `docs/CI_CD.md`: build and deployment pipelines
-- `docs/OBSERVABILITY.md`: metrics, tracing, SLO
-- `docs/STATE.schema.json`: JSON-Schema for development state validation (TRAE tooling)
-- `docs/CP1_ROUTER_SPEC.md`: Specification for CP1-ROUTER
-- `docs/CP_TRANSITION_GUIDE.md`: Guide for transitions between CPs
-- `docs/AGENT_ASSIGNMENT.md`: Agent assignment and their roles
-- `docs/ADR_INDEX.md`: Architecture Decision Records (ADR) index
-- `docs/CI_VALIDATION.md`: Guide for CI validation of development state
-
-### Development Tooling (TRAE IDE)
-
-Development state management and HMAC-chain audit are provided by TRAE IDE tooling, separate from Beamline product architecture.
-
-## TRAE IDE
-
-- Website: https://www.trae.ai/
-- TRAE IDE uses development state management for project tracking (separate from Beamline product functionality).
-- DevState (see `devstate-tools/devstate/`) validates and exports these files to enforce No-Drift.
-- Recommended: add `bash devstate-tools/devstate/scripts/devstate_verify.sh` to pre-commit/pre-push locally.
-
-### DevState Quickstart
-
-- Docker: `make devstate-up` then `curl http://localhost:3180/health`.
-- Local (no Docker): `npm install` in `devstate-tools/devstate/server` and run `node devstate-tools/devstate/server/http-server.js` with env `DATABASE_URL`, `HMAC_SECRET`, `DEVSTATE_HTTP_PORT`.
-- Scripts: use `devstate-tools/devstate/scripts/devstate_export.sh` and `devstate-tools/devstate/scripts/devstate_verify.sh` to interact with the server.
-
-### Router Dev Quickstart
-- Start here: `docs/archive/dev/ROUTER_DEV_QUICKSTART.md` — run Router + DevState + NATS, switch CP, enable CP2+ features, and run fast tests.
-
-## Checkpoints (CP)
-
-### CP0-LC: Repo/State Bootstrap ✅
-**Status**: Completed  
-**Goal**: Specification of repository structure, state, contracts, DDL
-
-**Result**: All specifications created, ready for CP1-ROUTER
-
-### CP1-LC: Router Core + C-Gateway ✅
-**Status**: Completed  
-**Goal**: Routing core implementation (Erlang) + HTTP Gateway (C11)
-
-**Components Completed**:
-- ✅ **C-Gateway**: HTTP REST API Gateway (C11) - `apps/c-gateway/`
-- ✅ **Router**: Routing core with RBAC, Policy Enforcement, Rate Limiting - `apps/otp/router/`
-
-**Key Features**:
-- gRPC service Router.Decide implementation
-- Routing policy application (weights, sticky, fallback)
-- NATS and Mnesia integration
-- RBAC system, Policy Enforcement, Rate Limiting
-- Admin gRPC service
-- Metrics and tracing
-- Tests (unit and integration)
-
-**Specification**: `docs/archive/dev/CP1_ROUTER_SPEC.md`  
-**ADR**: `docs/ADR/ADR-016-c-gateway-migration.md`
-
-### CP2-LC: Enhanced Features 🔄
-**Status**: In Progress  
-**Goal**: CP2 features enabled by default, validation suite, observability enhancements
-
-**CP2 Features** (enabled by default):
-- ✅ JetStream integration with durable subscriptions
-- ✅ Idempotency layer (ETS-based with TTL)
-- ✅ OpenTelemetry distributed tracing
-- ✅ Tenant validation/ACL enforcement
-- ✅ Admin gRPC service
-
-**Current Tasks**: See `docs/archive/dev/CP2_READINESS_ROUTER_GATEWAY_UPDATED.md`
-
-### CP3-LC: Worker CAF & Ops Readiness ✅
-**Status**: Completed  
-**Goal**: High-performance compute engine and Operational Readiness
-
-**Component Completed**:
-- ✅ **Worker CAF**: C++/CAF compute engine - `apps/caf/processor/`
-- ✅ **Ops Readiness**:
-    - Structured JSONL logging (Router & Gateway)
-    - Graceful Shutdown (Router & Gateway)
-    - Degraded Mode & Resilience Verification
-    - Comprehensive Runbooks
-
-**Key Features**:
-- Actor-based runtime with resource pools (CPU/GPU/IO)
-- BlockExecutor interface
-- Phase 1 blocks (HTTP, FS, SQL, Human approval)
-- Comprehensive observability (Prometheus metrics, OpenTelemetry tracing, JSON logs)
-- Sandbox mode, multi-tenant isolation, retry/timeout handling, DLQ support
-
-**Ready For**: Throughput testing & UI Integration
-
-### CP4: UI Integration 🚧
-**Status**: In Development  
-**Goal**: Phoenix LiveView UI integration
-
-**Component**: UI (`apps/ui_web/`) - Migration from SvelteKit to Phoenix LiveView
-
-**ADR**: `docs/ADR/ADR-017-phoenix-liveview-ui.md`
-
-### CP5: Production Ready 📅
-**Status**: Planned  
-**Goal**: Full production readiness
-
-**For detailed checkpoint information**: See `docs/SYSTEM_METADATA.md`
-
-## Versioning
-
-- **Project version**: 1.0
-- **ABI version**: v1
-- **Last update**: 2025-11-07
-
-## Authors
-
-- Agent 1: Repo/State Bootstrap (CP0-LC)
-
-## License
-
-[Specify license]
-
-## CP1 Acceptance Checklist
-
-To check CP1-ROUTER readiness, see acceptance checklist: **[docs/CP1_CHECKLIST.md](docs/CP1_CHECKLIST.md)**
-
-## Service Health
-
-- Router: gRPC health-check via grpc_health_probe on port 9000.
-- Ingress: HTTP /_health (text ok) and /_readyz (text ready, checks Router availability).
-- Docker Compose and Kubernetes are configured to use these checks; manifests are located in infra/k8s/.
+**Built with ❤️ using Erlang, Rust, C++, C, and Phoenix**
