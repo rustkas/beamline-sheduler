@@ -150,8 +150,8 @@ BeamLine Scheduler coordinates complex workflows across distributed systems by i
 
 ```bash
 # Clone with submodules
-git clone --recursive https://github.com/rustkas/beamline-sheduler.git
-cd beamline-sheduler
+git clone --recursive https://github.com/rustkas/beamline-scheduler.git
+cd beamline-scheduler
 
 # Or if already cloned, initialize submodules
 git submodule init
@@ -399,8 +399,9 @@ Built with:
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/rustkas/beamline-sheduler/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/rustkas/beamline-sheduler/discussions)
+- **AI Assistant**: [BeamLine Master](https://aistudio.instagram.com/ai/4815329165457920/) - Ask questions about the platform 🤖
+- **Issues**: [GitHub Issues](https://github.com/rustkas/beamline-scheduler/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/rustkas/beamline-scheduler/discussions)
 
 ---
 

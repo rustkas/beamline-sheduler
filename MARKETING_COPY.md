@@ -25,7 +25,7 @@ Instead of forcing everything into one language, we used the right tool for each
 **Perfect for:**
 Data pipelines, microservices choreography, event-driven architectures, distributed computing
 
-Check it out: https://github.com/rustkas/beamline-sheduler
+Check it out: https://github.com/rustkas/beamline-scheduler
 
 #DistributedSystems #Erlang #Rust #CPlusPlus #Microservices #WorkflowOrchestration #CloudNative
 
@@ -42,7 +42,7 @@ Built BeamLine Scheduler: polyglot distributed workflow platform
 
 10K req/s, <100ms latency, production-ready observability
 
-github.com/rustkas/beamline-sheduler
+github.com/rustkas/beamline-scheduler
 
 #Erlang #Rust #DistributedSystems
 
@@ -63,7 +63,7 @@ I'm building **BeamLine Scheduler** - a production-grade distributed workflow or
 
 **Tech Stack:** Erlang/OTP 26 • Rust • C++/CAF • C11 • Phoenix LiveView • NATS • PostgreSQL • Docker • Kubernetes
 
-[View Project →](https://github.com/rustkas/beamline-sheduler)
+[View Project →](https://github.com/rustkas/beamline-scheduler)
 
 ---
 
@@ -76,7 +76,7 @@ Transform complex workflows into reliable, high-performance execution with a bat
 
 **10,000+ req/s** • **<100ms latency** • **Production-ready**
 
-[View on GitHub](https://github.com/rustkas/beamline-sheduler) | [Read Docs](#)
+[View on GitHub](https://github.com/rustkas/beamline-scheduler) | [Read Docs](#)
 
 ---
 
@@ -95,7 +95,7 @@ A production-grade platform for coordinating complex task pipelines across distr
 
 **Tech:** Erlang/OTP • Rust • C++/CAF • Phoenix • NATS • Docker
 
-[GitHub](https://github.com/rustkas/beamline-sheduler) • [Details](PROJECT_DESCRIPTION.md)
+[GitHub](https://github.com/rustkas/beamline-scheduler) • [Details](PROJECT_DESCRIPTION.md)
 
 ---
 
@@ -127,7 +127,7 @@ Architected and developed a high-performance distributed workflow orchestration 
 - Reduces operational toil through automated orchestration
 - Provides foundation for SaaS workflow automation products
 
-[GitHub Repository](https://github.com/rustkas/beamline-sheduler)
+[GitHub Repository](https://github.com/rustkas/beamline-scheduler)
 
 ---
 
@@ -214,7 +214,7 @@ BeamLine Scheduler is a production-ready platform for coordinating complex workf
 **Tech Stack:**
 Erlang/OTP • Rust • C++/CAF • C • Phoenix • NATS • Kubernetes
 
-[GitHub](https://github.com/rustkas/beamline-sheduler) | [Docs](PROJECT_DESCRIPTION.md)
+[GitHub](https://github.com/rustkas/beamline-scheduler) | [Docs](PROJECT_DESCRIPTION.md)
 
 ---
 
@@ -254,7 +254,7 @@ I've been working on BeamLine Scheduler—a distributed workflow orchestration p
 - C++/CAF: Actor model for fine-grained concurrency control
 - Rust: Memory safety without GC for worker tasks (HTTP, DB, scripting)
 
-**GitHub:** https://github.com/rustkas/beamline-sheduler
+**GitHub:** https://github.com/rustkas/beamline-scheduler
 
 Open to feedback, questions, and contributions!
 
@@ -264,7 +264,7 @@ Open to feedback, questions, and contributions!
 
 **John Doe**  
 Software Architect  
-Creator of [BeamLine Scheduler](https://github.com/rustkas/beamline-sheduler) - Distributed Workflow Orchestration  
+Creator of [BeamLine Scheduler](https://github.com/rustkas/beamline-scheduler) - Distributed Workflow Orchestration  
 
 LinkedIn | GitHub | Email
 
@@ -311,12 +311,12 @@ Erlang/OTP • Rust • C++/CAF • C • Phoenix LiveView • NATS • Kubernet
 
 ## Getting Started
 ```bash
-git clone --recursive https://github.com/rustkas/beamline-sheduler.git
+git clone --recursive https://github.com/rustkas/beamline-scheduler.git
 docker-compose up -d
 ```
 
 ## Links
-- GitHub: https://github.com/rustkas/beamline-sheduler
+- GitHub: https://github.com/rustkas/beamline-scheduler
 - Docs: PROJECT_DESCRIPTION.md
 - License: Apache 2.0
 

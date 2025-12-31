@@ -546,8 +546,8 @@ systemctl start beamline-worker
 
 ```bash
 # Clone with submodules
-git clone --recursive https://github.com/rustkas/beamline-sheduler.git
-cd beamline-sheduler
+git clone --recursive https://github.com/rustkas/beamline-scheduler.git
+cd beamline-scheduler
 
 # Start all services
 docker-compose up -d
@@ -610,9 +610,9 @@ Apache License 2.0 - See [LICENSE](LICENSE)
 
 ## Contact & Support
 
-- **GitHub**: [BeamLine Scheduler](https://github.com/rustkas/beamline-sheduler)
-- **Issues**: [GitHub Issues](https://github.com/rustkas/beamline-sheduler/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/rustkas/beamline-sheduler/discussions)
+- **GitHub**: [BeamLine Scheduler](https://github.com/rustkas/beamline-scheduler)
+- **Issues**: [GitHub Issues](https://github.com/rustkas/beamline-scheduler/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/rustkas/beamline-scheduler/discussions)
 
 ---
 

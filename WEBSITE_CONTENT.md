@@ -8,7 +8,7 @@
 ✔️ Migrate existing systems for 10x speed and reliability  
 ✔️ Process millions of events with <100ms latency
 
-**[Get Started](#) • [View on GitHub](https://github.com/rustkas/beamline-sheduler)**
+**[Get Started](#) • [View on GitHub](https://github.com/rustkas/beamline-scheduler)**
 
 ---
 
@@ -87,7 +87,7 @@ Each component uses optimal technology:
 ### 🔓 Open Source
 Free, Apache 2.0 licensed — perfect for developers and startups seeking flexibility and transparency.
 
-**[View on GitHub →](https://github.com/rustkas/beamline-sheduler)**
+**[View on GitHub →](https://github.com/rustkas/beamline-scheduler)**
 
 ### 💼 Commercial Services
 - **Managed Cloud** — Fully managed SaaS version
@@ -166,8 +166,8 @@ Build your next product on BeamLine:
 
 ### 1. Quick Start (5 minutes)
 ```bash
-git clone --recursive https://github.com/rustkas/beamline-sheduler.git
-cd beamline-sheduler
+git clone --recursive https://github.com/rustkas/beamline-scheduler.git
+cd beamline-scheduler
 docker-compose up -d
 ```
 
@@ -191,7 +191,7 @@ We provide:
 📧 **Email**: [your-email@example.com]  
 💬 **Consultation**: [Schedule a call](#)  
 📚 **Documentation**: [Read docs](PROJECT_DESCRIPTION.md)  
-🐙 **GitHub**: [View source](https://github.com/rustkas/beamline-sheduler)
+🐙 **GitHub**: [View source](https://github.com/rustkas/beamline-scheduler)
 
 ---
 
@@ -222,7 +222,7 @@ Erlang reliability + C/C++/Rust performance.
 ✅ Self-healing  
 ✅ Open source
 
-**[Get Started](#) • [GitHub](https://github.com/rustkas/beamline-sheduler)**
+**[Get Started](#) • [GitHub](https://github.com/rustkas/beamline-scheduler)**
 
 ---
 

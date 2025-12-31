@@ -79,4 +79,4 @@ It takes care of all the routine work — so people can focus on what truly matt
 
 And businesses can grow faster, operate more reliably, and reduce costs.
 
-**[Get Started →](#) • [View on GitHub](https://github.com/rustkas/beamline-sheduler)**
+**[Get Started →](#) • [View on GitHub](https://github.com/rustkas/beamline-scheduler)**

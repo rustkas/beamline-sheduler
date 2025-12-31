@@ -21,7 +21,7 @@ BeamLine Scheduler is designed for enterprises requiring:
 
 Tech focus: Distributed systems, fault-tolerant architecture, polyglot microservices, cloud-native development.
 
-Open source: https://github.com/rustkas/beamline-sheduler
+Open source: https://github.com/rustkas/beamline-scheduler
 
 ---
 
@@ -51,7 +51,7 @@ Impact:
 • Provides foundation for SaaS workflow automation platforms
 • Open-sourced with Apache 2.0 license for community collaboration
 
-GitHub: https://github.com/rustkas/beamline-sheduler
+GitHub: https://github.com/rustkas/beamline-scheduler
 
 ---
 
@@ -151,7 +151,7 @@ A production-grade platform for coordinating complex task pipelines across distr
 
 Technologies: Erlang/OTP • Rust • C++/CAF • C • Phoenix • NATS • Kubernetes
 
-GitHub: https://github.com/rustkas/beamline-sheduler
+GitHub: https://github.com/rustkas/beamline-scheduler
 
 ---
 
@@ -211,7 +211,7 @@ Instead of forcing everything into one language, we used the right tool for each
 • Event-driven architectures
 • Distributed computing workloads
 
-**Open Source:** https://github.com/rustkas/beamline-sheduler
+**Open Source:** https://github.com/rustkas/beamline-scheduler
 
 Would love to hear your thoughts! Feel free to reach out if you're working on similar challenges.
 
@@ -274,7 +274,7 @@ Suggested custom URL: linkedin.com/in/yourname-beamline
 ## Contact Information
 
 • GitHub: https://github.com/rustkas
-• Project: https://github.com/rustkas/beamline-sheduler
+• Project: https://github.com/rustkas/beamline-scheduler
 • Email: [your-email]
 • Website: [if you have one]
 
