@@ -1,0 +1,41 @@
+{
+  "ts": "2025-01-27T12:00:00Z",
+  "actor": "wrk-3|wrk-obs1",
+  "action": "worker_observability_cp1_complete",
+  "cp_from": "CP1-LC",
+  "cp_to": "CP1-LC",
+  "state_checksum": "SHA256_OF_STATE_JSON",
+  "hmac_prev": "PREVIOUS_HMAC_FROM_LAST_ENTRY",
+  "hmac": "CALCULATED_HMAC_FOR_THIS_ENTRY",
+  "metadata": {
+    "readiness_checklist": {
+      "reference": "docs/archive/dev/CP1_WORKER_OBSERVABILITY_READINESS_CHECKLIST.md",
+      "validation_status": "passed",
+      "items_checked": 23,
+      "items_passed": 23,
+      "categories": {
+        "contracts": {
+          "checked": 7,
+          "passed": 7
+        },
+        "tests": {
+          "checked": 8,
+          "passed": 8
+        },
+        "observability": {
+          "checked": 8,
+          "passed": 8
+        }
+      }
+    },
+    "artifacts_added": [
+      "path/to/artifact1",
+      "path/to/artifact2"
+    ],
+    "artifacts_modified": [
+      "path/to/modified1"
+    ],
+    "notes": "CP1 Worker + Observability readiness checklist validated. All 23 items passed."
+  }
+}
+

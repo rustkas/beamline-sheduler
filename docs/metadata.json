@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "last_update": "2025-11-09T00:00:00Z",
+  "language": {
+    "required": "en",
+    "fallback": "en",
+    "translate_non_english": true,
+    "preserve_original": false,
+    "file_naming": "ascii_english",
+    "code_comments": "english"
+  },
+  "format": {
+    "primary": "markdown",
+    "extensions": [".md"],
+    "style": {
+      "headers": "Title Case",
+      "bullets": "- ",
+      "tone": "technical_concise"
+    }
+  },
+  "policies": {
+    "canonical_docs": [
+      "docs/BEAMLINE_VISION_AND_ARCHITECTURE.md",
+      "docs/API_CONTRACTS.md",
+      "docs/NATS_SUBJECTS.md"
+    ],
+    "alternates": [
+      "docs/API_CONTRACTS_EN.md"
+    ],
+    "contracts": {
+      "transport": "nats_json",
+      "versioning": "v1 with additive, backward-compatible changes",
+      "error_schema": "ErrorResponse",
+      "tracing_fields": ["trace_id", "request_id"],
+      "multi_tenancy_field": "tenant_id"
+    }
+  },
+  "workflow": {
+    "authoring": {
+      "language_check": "must be English",
+      "translations": "translate any Russian/other language text into English before commit"
+    },
+    "review": {
+      "required_checks": [
+        "language",
+        "consistency_with_contracts",
+        "security_considerations"
+      ]
+    }
+  }
+}

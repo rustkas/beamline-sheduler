@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://beamline.schemas/history/v1.0.0",
+  "title": "Beamline History (v1.0.0)",
+  "type": "array",
+  "description": "Append-only audit trail entries with HMAC chain integrity",
+  "items": {
+    "type": "object",
+    "additionalProperties": true,
+    "required": ["ts", "actor", "action", "cp_to", "state_checksum", "hmac_prev", "hmac"],
+    "properties": {
+      "ts": {
+        "type": "string"
+      },
+      "actor": {
+        "type": "string"
+      },
+      "action": {
+        "type": "string"
+      },
+      "cp_from": {
+        "type": ["string", "null"]
+      },
+      "cp_to": {
+        "type": "string"
+      },
+      "state_checksum": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "hmac_prev": {
+        "type": "string"
+      },
+      "hmac": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "metadata": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}
+

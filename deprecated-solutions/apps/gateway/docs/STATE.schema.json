@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "project",
+    "current_cp",
+    "no_drift",
+    "artifact_checksums"
+  ],
+  "properties": {
+    "project": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "current_cp": {
+      "type": "string"
+    },
+    "no_drift": {
+      "type": "boolean"
+    },
+    "artifact_checksums": {
+      "type": "array"
+    },
+    "updated_at": {
+      "type": "string"
+    }
+  }
+}

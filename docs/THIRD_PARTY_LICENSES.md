@@ -1,0 +1,225 @@
+﻿# Third-Party Licenses Registry
+
+**Version**: 1.0 (Draft)  
+**Last Updated**: 2025-01-27  
+**Author**: WORKER wrk-12 - Compliance & Governance  
+**Status**: Draft - In Progress
+
+## Purpose
+
+This document maintains a registry of all third-party dependencies and their licenses for the BeamLine Constructor project.
+
+## Project License
+
+**Primary License**: Apache License 2.0  
+**SPDX Identifier**: `Apache-2.0`  
+**License File**: `LICENSE`
+
+## License Registry
+
+### Node.js Dependencies
+
+#### Production Dependencies
+
+| Package | Version | License | SPDX | Compatibility | Source | Notes |
+|---------|--------|---------|------|---------------|--------|-------|
+| *To be populated* | - | - | - | - | - | - |
+
+#### Development Dependencies
+
+| Package | Version | License | SPDX | Compatibility | Source | Notes |
+|---------|--------|---------|------|---------------|--------|-------|
+| *To be populated* | - | - | - | - | - | - |
+
+### Erlang/OTP Dependencies
+
+| Package | Version | License | SPDX | Compatibility | Source | Notes |
+|---------|--------|---------|------|---------------|--------|-------|
+| *To be populated* | - | - | - | - | - | - |
+
+### C++ Dependencies
+
+| Package | Version | License | SPDX | Compatibility | Source | Notes |
+|---------|--------|---------|------|---------------|--------|-------|
+| *To be populated* | - | - | - | - | - | - |
+
+## License Compatibility Status
+
+### Summary
+
+- **Total Dependencies**: *To be calculated*
+- **Compatible**: *To be calculated*
+- **Requires Review**: *To be calculated*
+- **Incompatible**: *To be calculated*
+
+### Compatibility Breakdown
+
+| License Type | Count | Status |
+|--------------|-------|--------|
+| MIT | *TBD* | ✅ Compatible |
+| Apache-2.0 | *TBD* | ✅ Compatible |
+| BSD-2-Clause | *TBD* | ✅ Compatible |
+| BSD-3-Clause | *TBD* | ✅ Compatible |
+| ISC | *TBD* | ✅ Compatible |
+| LGPL-2.1 | *TBD* | ⚠️ Review Required |
+| LGPL-3.0 | *TBD* | ⚠️ Review Required |
+| MPL-2.0 | *TBD* | ⚠️ Review Required |
+| GPL-2.0 | *TBD* | ❌ Incompatible |
+| GPL-3.0 | *TBD* | ❌ Incompatible |
+| AGPL-3.0 | *TBD* | ❌ Incompatible |
+
+## License Details
+
+### Permissive Licenses (Fully Compatible)
+
+#### MIT License
+
+**SPDX**: `MIT`  
+**Compatibility**: ✅ Fully compatible with Apache-2.0
+
+**Common Packages**:
+- *To be populated*
+
+#### Apache License 2.0
+
+**SPDX**: `Apache-2.0`  
+**Compatibility**: ✅ Same as project license
+
+**Common Packages**:
+- *To be populated*
+
+#### BSD-2-Clause
+
+**SPDX**: `BSD-2-Clause`  
+**Compatibility**: ✅ Fully compatible with Apache-2.0
+
+**Common Packages**:
+- *To be populated*
+
+#### BSD-3-Clause
+
+**SPDX**: `BSD-3-Clause`  
+**Compatibility**: ✅ Fully compatible with Apache-2.0
+
+**Common Packages**:
+- *To be populated*
+
+#### ISC License
+
+**SPDX**: `ISC`  
+**Compatibility**: ✅ Fully compatible with Apache-2.0
+
+**Common Packages**:
+- *To be populated*
+
+### Weak Copyleft Licenses (Requires Review)
+
+#### LGPL-2.1
+
+**SPDX**: `LGPL-2.1`  
+**Compatibility**: ⚠️ Compatible with conditions
+
+**Conditions**:
+- Must be used as a library (dynamic linking)
+- Source code modifications must be disclosed
+- License notices must be preserved
+
+**Packages**:
+- *To be populated*
+
+#### LGPL-3.0
+
+**SPDX**: `LGPL-3.0`  
+**Compatibility**: ⚠️ Compatible with conditions
+
+**Conditions**:
+- Must be used as a library (dynamic linking)
+- Source code modifications must be disclosed
+- License notices must be preserved
+
+**Packages**:
+- *To be populated*
+
+#### MPL-2.0
+
+**SPDX**: `MPL-2.0`  
+**Compatibility**: ⚠️ Compatible with conditions
+
+**Conditions**:
+- File-level copyleft (not project-level)
+- Modified files must be MPL-2.0
+- License notices must be preserved
+
+**Packages**:
+- *To be populated*
+
+### Incompatible Licenses (Prohibited)
+
+#### GPL-2.0
+
+**SPDX**: `GPL-2.0`  
+**Compatibility**: ❌ Incompatible
+
+**Reason**: Requires derivative works to be GPL-2.0, conflicts with Apache-2.0
+
+**Action**: Must not be used as dependency
+
+#### GPL-3.0
+
+**SPDX**: `GPL-3.0`  
+**Compatibility**: ❌ Incompatible
+
+**Reason**: Requires derivative works to be GPL-3.0, conflicts with Apache-2.0
+
+**Action**: Must not be used as dependency
+
+#### AGPL-3.0
+
+**SPDX**: `AGPL-3.0`  
+**Compatibility**: ❌ Incompatible
+
+**Reason**: Requires source code disclosure for network services, conflicts with Apache-2.0
+
+**Action**: Must not be used as dependency
+
+## License Verification
+
+### Automated Verification
+
+Run license compliance check:
+
+```bash
+bash scripts/check_license_compliance.sh
+```
+
+### Manual Verification
+
+For packages with unclear licenses:
+
+1. Check package metadata (`package.json`, `rebar.config`, etc.)
+2. Check package repository (npm, hex.pm, etc.)
+3. Review license file in package source
+4. Document in this registry
+
+## SBOM (Software Bill of Materials)
+
+Machine-readable SBOM is maintained in:
+- **SPDX Format**: `docs/COMPLIANCE/SBOM.json`
+- **Generated by**: `scripts/generate_sbom.sh`
+
+## Updates
+
+This registry is maintained by **WORKER wrk-12: Compliance & Governance**.
+
+**Update Frequency**: On every dependency change  
+**Last Update**: 2025-01-27  
+**Next Review**: 2025-04-27 (quarterly)
+
+## Notes
+
+- This is a **draft** document - will be populated as dependencies are added
+- All dependencies must be verified before being added to the project
+- License compatibility must be checked before merging PRs
+- SBOM must be regenerated after dependency changes
+
+

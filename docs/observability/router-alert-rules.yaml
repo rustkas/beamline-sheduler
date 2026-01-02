@@ -1,0 +1,371 @@
+# Router Alert Rules for Prometheus/Alertmanager
+# 
+# This file contains alert rules for Router observability, focusing on:
+# 1. DevState/CP state health
+# 2. NATS contract violations
+# 3. JetStream backpressure and overload
+#
+# Usage:
+#   - Import into Prometheus configuration (prometheus.yml)
+#   - Or use with Alertmanager for alert routing
+#
+# Alert Severity Levels:
+#   - warning: Requires attention but not immediately critical
+#   - critical: Requires immediate action
+
+groups:
+  - name: router_cp_state
+    interval: 30s
+    rules:
+      - alert: RouterCPStateErrors
+        expr: sum(rate(router_cp_state_errors_total[5m])) > 0
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: devstate
+        annotations:
+          summary: "Router CP state errors detected"
+          description: "Router has detected CP state errors: {{ $value }} errors/sec. Reason: {{ $labels.reason }}"
+          runbook_url: "docs/archive/dev/ROUTER_DEVSTATE_E2E_SCENARIOS.md#scenario-2-devstate-degradation-missing-state-file"
+          runbook_adr: "docs/ADR/ADR-015-router-devstate-integration.md"
+
+      - alert: RouterCPFallback
+        expr: sum(rate(router_cp_state_fallback_total[5m])) > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: router
+          subsystem: devstate
+        annotations:
+          summary: "Router falling back to CP1 baseline"
+          description: "Router is operating in CP1 baseline mode due to DevState issues. Advanced features are unavailable."
+          runbook_url: "docs/archive/dev/ROUTER_DEVSTATE_E2E_SCENARIOS.md#scenario-2-devstate-degradation-missing-state-file"
+          runbook_adr: "docs/ADR/ADR-015-router-devstate-integration.md#cp1-minimal-mode-enforcement"
+
+  - name: router_nats_contract
+    interval: 30s
+    rules:
+      - alert: RouterNATSContractViolations
+        expr: sum(rate(router_nats_contract_violations_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: nats
+        annotations:
+          summary: "NATS contract violations detected"
+          description: "Router detected {{ $value }} contract violations/sec on subject {{ $labels.subject }}. Violation count: {{ $labels.violation_count }}"
+          runbook_url: "docs/archive/dev/GATEWAY_ROUTER_CONTRACT_SMOKE.md#error-contract-scenarios"
+          runbook_mapping: "docs/ARCHITECTURE/PROTO_NATS_MAPPING.md"
+
+  - name: router_jetstream_backpressure
+    interval: 30s
+    rules:
+      # Alert: High Redelivery Rate (Backpressure)
+      - alert: RouterJetStreamHighRedeliveryRate
+        expr: |
+          (
+            sum(rate(router_jetstream_redelivery_total[5m]))
+            /
+            (sum(rate(router_results_total[5m])) > 0)
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: jetstream
+        annotations:
+          summary: "Router JetStream high redelivery rate (backpressure)"
+          description: "Router redelivery rate is {{ $value | humanizePercentage }} (threshold: 10%). This indicates backpressure - Router or downstream consumers (CAF/Provider) are unable to process messages fast enough."
+          runbook_url: "../../apps/otp/router/docs/archive/dev_reports/JETSTREAM_FAULT_INJECTION_TESTS.md#scenario-2-processing-delays-causing-redelivery-growth"
+          runbook_dashboard: "docs/observability/OBSERVABILITY_ROUTER_DASHBOARD.md"
+
+      # Alert: MaxDeliver Exhaustion (Message Loss)
+      - alert: RouterJetStreamMaxDeliverExhausted
+        expr: sum(rate(router_jetstream_maxdeliver_exhausted_total[5m])) > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: router
+          subsystem: jetstream
+        annotations:
+          summary: "Router JetStream MaxDeliver exhausted (messages lost)"
+          description: "Router detected {{ $value }} messages/sec that exceeded MaxDeliver limit. These messages are permanently lost and will not be redelivered. Assignment ID: {{ $labels.assignment_id }}, Request ID: {{ $labels.request_id }}"
+          runbook_url: "../../apps/otp/router/docs/archive/dev_reports/JETSTREAM_FAULT_INJECTION_TESTS.md#scenario-3-maxdeliver-exhaustion-for-partial-messages"
+          runbook_adr: "docs/ADR/ADR-011-jetstream-e2e.md#maxdeliver-exhaustion"
+
+      # Alert: Contract Violations + Redelivery (Systematic Issues)
+      - alert: RouterJetStreamContractViolationsWithRedelivery
+        expr: |
+          sum(rate(router_nats_contract_violations_total[5m])) > 0
+          and
+          sum(rate(router_jetstream_redelivery_total[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: jetstream
+        annotations:
+          summary: "Router JetStream contract violations causing redeliveries"
+          description: "Router detected contract violations ({{ $value }} violations/sec) combined with redeliveries ({{ $value }} redeliveries/sec). This indicates systematic client-side issues (missing headers, wrong format)."
+          runbook_url: "docs/archive/dev/GATEWAY_ROUTER_CONTRACT_SMOKE.md#error-contract-scenarios"
+          runbook_mapping: "docs/ARCHITECTURE/PROTO_NATS_MAPPING.md"
+
+      # Alert: High Redelivery Rate from Specific Source
+      - alert: RouterJetStreamHighRedeliveryFromSource
+        expr: sum(rate(router_jetstream_redelivery_total[5m])) by (source) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: jetstream
+        annotations:
+          summary: "Router JetStream high redelivery rate from {{ $labels.source }}"
+          description: "Router detected {{ $value }} redeliveries/sec from source '{{ $labels.source }}'. This indicates specific failure mode requiring investigation."
+          runbook_url: "../../apps/otp/router/docs/archive/dev_reports/JETSTREAM_FAULT_INJECTION_TESTS.md"
+          runbook_adr: "docs/ADR/ADR-011-jetstream-e2e.md#redelivery-behavior"
+
+      # Alert: Low Message Processing Success Rate
+      - alert: RouterJetStreamLowSuccessRate
+        expr: |
+          (
+            sum(rate(router_results_total{status="success"}[5m]))
+            /
+            (sum(rate(router_results_total[5m])) > 0)
+          ) < 0.80
+        for: 5m
+        labels:
+          severity: critical
+          component: router
+          subsystem: jetstream
+        annotations:
+          summary: "Router JetStream low message processing success rate"
+          description: "Router message processing success rate is {{ $value | humanizePercentage }} (threshold: 80%). This indicates significant processing failures."
+          runbook_url: "../../apps/otp/router/docs/archive/dev_reports/JETSTREAM_FAULT_INJECTION_TESTS.md"
+          runbook_dashboard: "docs/observability/OBSERVABILITY_ROUTER_DASHBOARD.md"
+
+      # Alert: Growing Redelivery Queue (Estimated)
+      - alert: RouterJetStreamGrowingRedeliveryQueue
+        expr: |
+          (
+            sum(increase(router_jetstream_redelivery_total[1h])) 
+            - 
+            sum(increase(router_results_total{status="success"}[1h]))
+          ) > 100
+        for: 10m
+        labels:
+          severity: warning
+          component: router
+          subsystem: jetstream
+        annotations:
+          summary: "Router JetStream redelivery queue growing"
+          description: "Router estimated redelivery queue depth is {{ $value }} messages. Queue is growing faster than messages are being processed, indicating severe backpressure."
+          runbook_url: "../../apps/otp/router/docs/archive/dev_reports/JETSTREAM_FAULT_INJECTION_TESTS.md#scenario-2-processing-delays-causing-redelivery-growth"
+          runbook_adr: "docs/ADR/ADR-011-jetstream-e2e.md#backpressure-detection"
+
+  - name: router_processing_health
+    interval: 30s
+    rules:
+      # Alert: High Parse Failure Rate
+      - alert: RouterHighParseFailureRate
+        expr: |
+          (
+            sum(rate(router_results_parse_failed_total[5m]))
+            /
+            (sum(rate(router_results_total[5m])) > 0)
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: processing
+        annotations:
+          summary: "Router high parse failure rate"
+          description: "Router parse failure rate is {{ $value | humanizePercentage }} (threshold: 5%). This indicates malformed messages from clients."
+          runbook_url: "docs/archive/dev/GATEWAY_ROUTER_CONTRACT_SMOKE.md#error-contract-scenarios"
+          runbook_contracts: "docs/API_CONTRACTS.md"
+
+      # Alert: High Tenant Rejection Rate
+      - alert: RouterHighTenantRejectionRate
+        expr: |
+          (
+            sum(rate(router_results_tenant_rejected_total[5m]))
+            /
+            (sum(rate(router_results_total[5m])) > 0)
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: processing
+        annotations:
+          summary: "Router high tenant rejection rate"
+          description: "Router tenant rejection rate is {{ $value | humanizePercentage }} (threshold: 10%). This indicates many tenants are not in allowlist or validation is failing."
+          runbook_url: "../../apps/otp/router/docs/dev/ROUTER_TENANT_MULTITENANT_SMOKE.md#test-invalid-tenant-rejection"
+          runbook_test: "apps/otp/router/test/router_tenant_multitenant_smoke_SUITE.erl"
+
+      # Alert: Usage Event Emission Failures
+      - alert: RouterUsageEmissionFailures
+        expr: sum(rate(router_usage_emit_failed_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: usage
+        annotations:
+          summary: "Router usage event emission failures"
+          description: "Router detected {{ $value }} usage event emission failures/sec. This indicates issues publishing usage events to NATS."
+          runbook_url: "docs/NATS_SUBJECTS.md#usagemetering"
+          runbook_adr: "docs/ADR/ADR-011-jetstream-e2e.md"
+
+  - name: router_caf_adapter
+    interval: 30s
+    rules:
+      # Alert: High CAF Assignment Retry Rate (CAF Overload)
+      - alert: RouterCAFHighRetryRate
+        expr: sum(rate(router_assignment_retry_total[5m])) > 0.17  # ~10 retries/min
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: caf_adapter
+        annotations:
+          summary: "Router CAF adapter high retry rate (CAF overload)"
+          description: "Router CAF adapter detected {{ $value }} retries/sec (threshold: ~10/min). This indicates CAF is slow or overloaded - assignments are timing out and being retried. Assignment ID: {{ $labels.assignment_id }}, Request ID: {{ $labels.request_id }}"
+          runbook_url: "docs/ADR/ADR-011-jetstream-e2e.md#caf-adapter-under-load"
+          runbook_test: "apps/otp/router/test/router_caf_adapter_load_thresholds_SUITE.erl"
+
+      # Alert: CAF Retry Exhaustion (CAF Unavailable)
+      - alert: RouterCAFRetryExhausted
+        expr: sum(rate(router_retry_exhausted_total[5m])) > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: router
+          subsystem: caf_adapter
+        annotations:
+          summary: "Router CAF adapter retry exhaustion (CAF unavailable)"
+          description: "Router CAF adapter exhausted all retries for {{ $value }} assignments/sec. CAF is unavailable or severely overloaded - assignments are not being published. Assignment ID: {{ $labels.assignment_id }}, Request ID: {{ $labels.request_id }}, Error: {{ $labels.error_kind }}, Retries: {{ $labels.retries }}"
+          runbook_url: "docs/ADR/ADR-011-jetstream-e2e.md#caf-adapter-under-load"
+          runbook_test: "apps/otp/router/test/router_caf_adapter_load_thresholds_SUITE.erl#test-caf-retry-exhaustion-emits-metrics"
+
+      # Alert: High CAF Assignment Publish Failure Rate (NATS/CAF Connectivity)
+      - alert: RouterCAFHighPublishFailureRate
+        expr: sum(rate(router_assignment_publish_failures_total[5m])) > 0.083  # ~5 failures/min
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: caf_adapter
+        annotations:
+          summary: "Router CAF adapter high publish failure rate (NATS/CAF connectivity issues)"
+          description: "Router CAF adapter detected {{ $value }} publish failures/sec (threshold: ~5/min). This indicates NATS/CAF connectivity issues. Assignment ID: {{ $labels.assignment_id }}, Request ID: {{ $labels.request_id }}, Error: {{ $labels.error_kind }}, Subject: {{ $labels.subject }}"
+          runbook_url: "docs/ADR/ADR-011-jetstream-e2e.md#caf-adapter-under-load"
+          runbook_test: "apps/otp/router/test/router_caf_adapter_load_thresholds_SUITE.erl#test-caf-error-response-reflected-in-metrics"
+
+  - name: router_extensions
+    interval: 30s
+    rules:
+      # Alert: High Extension Error Rate
+      - alert: ExtensionErrorRateHigh
+        expr: |
+          sum(rate(router_extension_invocation_total{status="error"}[5m])) by (extension_id) /
+          sum(rate(router_extension_invocation_total[5m])) by (extension_id) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: extensions
+        annotations:
+          summary: "Extension {{ $labels.extension_id }} error rate is high"
+          description: "Extension {{ $labels.extension_id }} has error rate of {{ $value | humanizePercentage }} over the last 5 minutes. Threshold: 30%"
+          runbook_url: "apps/otp/router/docs/EXTENSIONS_RUNBOOK.md#high-error-rate"
+
+      # Alert: Circuit Breaker Opened
+      - alert: ExtensionCircuitBreakerOpened
+        expr: router_extension_circuit_breaker_state{state="open"} == 2
+        for: 1m
+        labels:
+          severity: critical
+          component: router
+          subsystem: extensions
+        annotations:
+          summary: "Extension {{ $labels.extension_id }} circuit breaker is open"
+          description: "Extension {{ $labels.extension_id }} circuit breaker has been open for at least 1 minute. Requests are failing fast."
+          runbook_url: "apps/otp/router/docs/EXTENSIONS_RUNBOOK.md#circuit-breaker-opened"
+
+      # Alert: High Extension Latency (P95)
+      - alert: ExtensionLatencyHighP95
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(router_extension_invocation_latency_ms_bucket[5m])) by (extension_id, le)
+          ) > 100
+        for: 10m
+        labels:
+          severity: warning
+          component: router
+          subsystem: extensions
+        annotations:
+          summary: "Extension {{ $labels.extension_id }} P95 latency is high"
+          description: "Extension {{ $labels.extension_id }} has P95 latency of {{ $value }}ms over the last 10 minutes. Threshold: 100ms"
+          runbook_url: "apps/otp/router/docs/EXTENSIONS_RUNBOOK.md#high-latency"
+
+      # Alert: High Extension Latency (P99)
+      - alert: ExtensionLatencyHighP99
+        expr: |
+          histogram_quantile(0.99, 
+            sum(rate(router_extension_invocation_latency_ms_bucket[5m])) by (extension_id, le)
+          ) > 200
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: extensions
+        annotations:
+          summary: "Extension {{ $labels.extension_id }} P99 latency is high"
+          description: "Extension {{ $labels.extension_id }} has P99 latency of {{ $value }}ms over the last 5 minutes. Threshold: 200ms"
+          runbook_url: "apps/otp/router/docs/EXTENSIONS_RUNBOOK.md#high-latency"
+
+      # Alert: Frequent Circuit Breaker Openings
+      - alert: ExtensionCircuitBreakerFrequentOpenings
+        expr: |
+          sum(rate(router_extension_circuit_breaker_opened_total[10m])) by (extension_id) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          component: router
+          subsystem: extensions
+        annotations:
+          summary: "Extension {{ $labels.extension_id }} circuit breaker opens frequently"
+          description: "Extension {{ $labels.extension_id }} circuit breaker has opened {{ $value }} times per second over the last 10 minutes. This indicates unstable extension service."
+          runbook_url: "apps/otp/router/docs/EXTENSIONS_RUNBOOK.md#circuit-breaker-opened"
+
+      # Alert: Extension Registry Sync Failed
+      - alert: ExtensionRegistrySyncFailed
+        expr: |
+          sum(rate(router_extension_registry_sync_total{status="error"}[5m])) /
+          sum(rate(router_extension_registry_sync_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: router
+          subsystem: extension_registry
+        annotations:
+          summary: "Extension Registry sync is failing"
+          description: "Extension Registry sync has error rate of {{ $value | humanizePercentage }} over the last 5 minutes. Extensions may not be updating."
+          runbook_url: "apps/otp/router/docs/EXTENSIONS_RUNBOOK.md#registry-sync-failed"
+
+      # Alert: Low Extension Success Rate
+      - alert: ExtensionSuccessRateLow
+        expr: router_extension_health_success_rate < 0.9
+        for: 10m
+        labels:
+          severity: warning
+          component: router
+          subsystem: extensions
+        annotations:
+          summary: "Extension {{ $labels.extension_id }} success rate is low"
+          description: "Extension {{ $labels.extension_id }} has success rate of {{ $value | humanizePercentage }} over the last 10 minutes. Threshold: 90%"
+          runbook_url: "apps/otp/router/docs/EXTENSIONS_RUNBOOK.md#high-error-rate"
+
