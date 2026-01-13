@@ -128,7 +128,7 @@ tools/git-mcp/
     "PostHog": {
       "command": "npx -y mcp-remote@latest https://mcp.posthog.com/sse --header Authorization:${POSTHOG_AUTH_HEADER}",
       "env": {
-        "POSTHOG_AUTH_HEADER": "Bearer phx_XHphvTnORQ75MgjvJBLwPnQRCk2z2PL6LmfECtrBJszesY1"
+        "POSTHOG_AUTH_HEADER": "Bearer phx_**"
       },
       "args": []
     },
