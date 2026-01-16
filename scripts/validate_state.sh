@@ -40,10 +40,12 @@ elif [ "${DRONE:-false}" = "true" ]; then
     echo "[INFO] Drone CI environment detected (DRONE=true)"
 fi
 
+ALLOW_DEFAULT_HMAC_SECRET="${ALLOW_DEFAULT_HMAC_SECRET:-false}"
+
 # Check if secret is available
 if [ -z "$BEAMLINE_HMAC_SECRET" ]; then
-    # In production environment secret is required
-    if [ "$IS_PRODUCTION" = "true" ]; then
+    # In production environment secret is required unless explicitly allowed
+    if [ "$IS_PRODUCTION" = "true" ] && [ "$ALLOW_DEFAULT_HMAC_SECRET" != "true" ]; then
         echo "[FAIL] BEAMLINE_HMAC_SECRET environment variable is not set"
         echo "[FAIL] This is required in CI/CD and production environments"
         echo "[FAIL] Current environment: Production/CI detected"
@@ -51,8 +53,12 @@ if [ -z "$BEAMLINE_HMAC_SECRET" ]; then
         exit 1
     else
         # In development can use default value
-        echo "[WARN] BEAMLINE_HMAC_SECRET not set, using default (development only)"
-        echo "[WARN] For production, set BEAMLINE_HMAC_SECRET and CI=true or PRODUCTION=true"
+        if [ "$IS_PRODUCTION" = "true" ]; then
+            echo "[WARN] BEAMLINE_HMAC_SECRET not set, using default (ALLOW_DEFAULT_HMAC_SECRET=true)"
+        else
+            echo "[WARN] BEAMLINE_HMAC_SECRET not set, using default (development only)"
+            echo "[WARN] For production, set BEAMLINE_HMAC_SECRET and CI=true or PRODUCTION=true"
+        fi
         HMAC_SECRET="beamline-secret-key-v1"
     fi
 else
@@ -188,16 +194,19 @@ import sys
 import os
 
 secret = os.environ.get('BEAMLINE_HMAC_SECRET', 'beamline-secret-key-v1')
+allow_default = os.environ.get('ALLOW_DEFAULT_HMAC_SECRET', 'false').lower() == 'true'
 # Check production environment
 is_production = (
     os.environ.get('CI') == 'true' or 
     os.environ.get('PRODUCTION') == 'true' or 
     os.environ.get('GITHUB_ACTIONS') == 'true'
 )
-if is_production and (not secret or secret == 'beamline-secret-key-v1'):
+if is_production and (not secret or secret == 'beamline-secret-key-v1') and not allow_default:
     print('[FAIL] BEAMLINE_HMAC_SECRET must be set in CI/CD and production')
     print('[FAIL] Current environment: CI/CD or Production detected')
     sys.exit(1)
+if is_production and allow_default and (not secret or secret == 'beamline-secret-key-v1'):
+    print('[WARN] ALLOW_DEFAULT_HMAC_SECRET=true; using default secret in CI/Prod')
 history_data = json.load(open('.trae/history.json'))
 
 # Handle both array and object with entries format
