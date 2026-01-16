@@ -28,6 +28,7 @@ jobs:
           pip install jsonschema
 
       - name: Validate state and history
+        if: ${{ hashFiles('.trae/state.json', '.trae/history.json') != '' }}
         env:
           BEAMLINE_HMAC_SECRET: ${{ secrets.BEAMLINE_HMAC_SECRET }}
           ALLOW_DEFAULT_HMAC_SECRET: ${{ secrets.BEAMLINE_HMAC_SECRET == '' && 'true' || 'false' }}
@@ -36,6 +37,7 @@ jobs:
           bash scripts/validate_state.sh
 
       - name: Verify HMAC chain (verbose)
+        if: ${{ hashFiles('.trae/state.json', '.trae/history.json') != '' }}
         env:
           BEAMLINE_HMAC_SECRET: ${{ secrets.BEAMLINE_HMAC_SECRET }}
           ALLOW_DEFAULT_HMAC_SECRET: ${{ secrets.BEAMLINE_HMAC_SECRET == '' && 'true' || 'false' }}
