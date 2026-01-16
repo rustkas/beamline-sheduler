@@ -69,7 +69,9 @@ _github
 .cursorignore
 .windsurf
 .windsurfignore
-.trae
+**/.trae/*
+!.trae/state.json
+!.trae/history.json
 sripts/windsurf_hooks/
 mcp-inventory.json
 
